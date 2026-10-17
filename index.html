@@ -77,54 +77,44 @@
           <li><a href="#categorias" class="nav-link">Categorías</a></li>
           <li><a href="#catalogo" class="nav-link">Catálogo</a></li>
           <li><button type="button" id="filter-offers-nav" class="nav-link"
-              style="background:none;border:none;cursor:pointer;">Ofertas 🔥</button></li>
-          <!-- Sección de Login en el Menú de Navegación -->
-          <li class="nav-auth-item">
-            <button type="button" class="nav-link nav-login-link" id="nav-login-btn">
-              <span class="nav-login-icon" aria-hidden="true">👤</span>
+              style="background:none;border:none;cursor:pointer;">Ofertas</button></li>
+          <!-- Único botón de Acceso en el Menú de Navegación (sin emoji) -->
+          <li class="nav-auth-item user-menu-wrapper" id="user-menu-wrapper">
+            <button type="button" class="nav-link nav-login-link" id="nav-login-btn" aria-haspopup="true" aria-expanded="false">
               <span id="nav-login-text">Iniciar sesión</span>
             </button>
+
+            <!-- Menú desplegable cuando el usuario ha iniciado sesión -->
+            <div class="user-dropdown-menu" id="user-dropdown-menu" role="menu" aria-hidden="true">
+              <div class="dropdown-user-info">
+                <div class="dropdown-avatar" id="dropdown-avatar">CR</div>
+                <div class="dropdown-details">
+                  <strong id="dropdown-user-name">Usuario</strong>
+                  <span id="dropdown-user-email">usuario@ejemplo.com</span>
+                </div>
+              </div>
+              <div class="dropdown-divider"></div>
+              <button type="button" class="dropdown-item" id="btn-dropdown-profile" role="menuitem">
+                Mis datos y direcciones
+              </button>
+              <button type="button" class="dropdown-item" id="btn-dropdown-orders" role="menuitem">
+                Mis pedidos simulados
+              </button>
+              <div class="dropdown-divider"></div>
+              <button type="button" class="dropdown-item dropdown-logout-btn" id="btn-dropdown-logout" role="menuitem">
+                Cerrar sesión
+              </button>
+            </div>
           </li>
         </ul>
       </nav>
 
-      <!-- Botones de Acción (Usuario, Favoritos y Carrito) -->
+      <!-- Botones de Acción (Favoritos y Carrito) -->
       <div class="header-actions">
         <!-- Botón Móvil de Búsqueda -->
         <button type="button" class="mobile-toggle-btn" id="mobile-search-toggle" aria-label="Abrir buscador móvil">
           🔍
         </button>
-
-        <!-- Menú / Botón de Usuario en la cabecera -->
-        <div class="user-menu-wrapper" id="user-menu-wrapper">
-          <button type="button" class="action-btn user-action-btn" id="header-user-btn" aria-label="Mi Cuenta"
-            aria-haspopup="true" aria-expanded="false">
-            <span class="user-avatar-badge" id="user-avatar-badge" aria-hidden="true">👤</span>
-            <span class="action-btn-text" id="header-user-text">Ingresar</span>
-          </button>
-
-          <!-- Menú desplegable cuando el usuario ha iniciado sesión -->
-          <div class="user-dropdown-menu" id="user-dropdown-menu" role="menu" aria-hidden="true">
-            <div class="dropdown-user-info">
-              <div class="dropdown-avatar" id="dropdown-avatar">CR</div>
-              <div class="dropdown-details">
-                <strong id="dropdown-user-name">Usuario</strong>
-                <span id="dropdown-user-email">usuario@ejemplo.com</span>
-              </div>
-            </div>
-            <div class="dropdown-divider"></div>
-            <button type="button" class="dropdown-item" id="btn-dropdown-profile" role="menuitem">
-              <span aria-hidden="true">📝</span> Mis datos y direcciones
-            </button>
-            <button type="button" class="dropdown-item" id="btn-dropdown-orders" role="menuitem">
-              <span aria-hidden="true">📦</span> Mis pedidos simulados
-            </button>
-            <div class="dropdown-divider"></div>
-            <button type="button" class="dropdown-item dropdown-logout-btn" id="btn-dropdown-logout" role="menuitem">
-              <span aria-hidden="true">🚪</span> Cerrar sesión
-            </button>
-          </div>
-        </div>
 
         <!-- Botón Favoritos -->
         <button type="button" class="action-btn" id="fav-toggle-btn" aria-label="Ver productos favoritos">
@@ -165,7 +155,6 @@
               </a>
               <button type="button" class="btn btn-secondary" id="hero-offers-btn">
                 <span>Ver promociones del día</span>
-                <span aria-hidden="true">🏷️</span>
               </button>
             </div>
           </div>
@@ -239,7 +228,7 @@
           <div class="toolbar-controls">
             <!-- Botón filtro solo ofertas -->
             <button type="button" class="quick-filter-btn" id="filter-offers-btn" aria-pressed="false">
-              🏷️ Solo ofertas
+              Solo ofertas
             </button>
 
             <!-- Ordenamiento -->

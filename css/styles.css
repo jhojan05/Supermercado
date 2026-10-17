@@ -2100,7 +2100,18 @@ body {
   }
 
   .nav-links {
+    display: flex;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-links li:not(.nav-auth-item) {
     display: none;
+  }
+
+  .nav-login-link {
+    padding: 6px 12px;
+    font-size: 0.82rem;
   }
 
   .mobile-toggle-btn {

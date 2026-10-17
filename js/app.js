@@ -991,9 +991,7 @@ function logoutUser() {
  */
 function updateUserUI() {
   const navLoginText = document.getElementById("nav-login-text");
-  const headerUserText = document.getElementById("header-user-text");
-  const headerUserBtn = document.getElementById("header-user-btn");
-  const userAvatarBadge = document.getElementById("user-avatar-badge");
+  const navLoginBtn = document.getElementById("nav-login-btn");
   const dropdownAvatar = document.getElementById("dropdown-avatar");
   const dropdownName = document.getElementById("dropdown-name");
   const dropdownEmail = document.getElementById("dropdown-email");
@@ -1008,23 +1006,19 @@ function updateUserUI() {
       .join("");
 
     if (navLoginText) navLoginText.textContent = firstName;
-    if (headerUserText) headerUserText.textContent = firstName;
-    if (headerUserBtn) {
-      headerUserBtn.classList.add("logged-in");
-      headerUserBtn.setAttribute("aria-label", `Mi Cuenta (${state.user.nombre})`);
+    if (navLoginBtn) {
+      navLoginBtn.classList.add("logged-in");
+      navLoginBtn.setAttribute("aria-label", `Mi Cuenta (${state.user.nombre})`);
     }
-    if (userAvatarBadge) userAvatarBadge.textContent = initials || "✓";
     if (dropdownAvatar) dropdownAvatar.textContent = initials || "CR";
     if (dropdownName) dropdownName.textContent = state.user.nombre;
     if (dropdownEmail) dropdownEmail.textContent = state.user.email;
   } else {
     if (navLoginText) navLoginText.textContent = "Iniciar sesión";
-    if (headerUserText) headerUserText.textContent = "Ingresar";
-    if (headerUserBtn) {
-      headerUserBtn.classList.remove("logged-in");
-      headerUserBtn.setAttribute("aria-label", "Iniciar sesión");
+    if (navLoginBtn) {
+      navLoginBtn.classList.remove("logged-in");
+      navLoginBtn.setAttribute("aria-label", "Iniciar sesión");
     }
-    if (userAvatarBadge) userAvatarBadge.textContent = "👤";
   }
 }
 
@@ -1075,7 +1069,7 @@ function closeLoginModal() {
  */
 function toggleUserDropdown() {
   const menu = document.getElementById("user-dropdown-menu");
-  const btn = document.getElementById("header-user-btn");
+  const btn = document.getElementById("nav-login-btn");
   if (!menu) return;
 
   const isOpen = menu.classList.contains("open");
@@ -1090,7 +1084,7 @@ function toggleUserDropdown() {
 
 function closeUserDropdown() {
   const menu = document.getElementById("user-dropdown-menu");
-  const btn = document.getElementById("header-user-btn");
+  const btn = document.getElementById("nav-login-btn");
   if (menu) {
     menu.classList.remove("open");
     menu.setAttribute("aria-hidden", "true");
@@ -1329,20 +1323,9 @@ function bindEvents() {
   const toggleRegPass = document.getElementById("toggle-reg-pass");
   const btnForgotPass = document.getElementById("btn-forgot-password");
 
-  // Botón login en menú de navegación
+  // Único botón de acceso / login en el menú de navegación
   if (navLoginBtn) {
-    navLoginBtn.addEventListener("click", () => {
-      if (state.user) {
-        openProfileModal();
-      } else {
-        openLoginModal("login");
-      }
-    });
-  }
-
-  // Botón usuario en acciones de cabecera
-  if (headerUserBtn) {
-    headerUserBtn.addEventListener("click", (e) => {
+    navLoginBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       if (state.user) {
         toggleUserDropdown();
