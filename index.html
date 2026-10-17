@@ -1,19 +1,23 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Supermercado Verde - Frutas, verduras frescas, carnes, lácteos y despensa con entrega a domicilio rápida en Colombia. Calidad y ahorro garantizado.">
-  <meta name="keywords" content="supermercado virtual, mercado online, frutas y verduras, alimentos frescos, colombia, compras">
-  <meta name="author" content="Supermercado Verde">
-  <title>Supermercado Verde | Tu mercado fresco directo a tu hogar</title>
-  
+  <meta name="description"
+    content="Supermercado La Casona - Frutas, verduras frescas, carnes, lácteos y despensa con entrega a domicilio rápida en Colombia. Calidad y ahorro garantizado.">
+  <meta name="keywords"
+    content="supermercado virtual, mercado online, frutas y verduras, alimentos frescos, colombia, compras">
+  <meta name="author" content="Supermercado La Casona">
+  <title>Supermercado La Casona | Tu mercado fresco directo a tu hogar</title>
+
   <!-- Favicon SVG -->
   <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
-  
+
   <!-- Hoja de estilos CSS3 -->
   <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
 
   <!-- Enlace accesible de salto al contenido -->
@@ -24,7 +28,8 @@
     <div class="container announcement-inner">
       <div class="announcement-item">
         <span>🚚</span>
-        <span>Envío <strong>GRATIS</strong> en compras superiores a <span class="announcement-highlight">$ 50.000 COP</span></span>
+        <span>Envío <strong>GRATIS</strong> en compras superiores a <span class="announcement-highlight">$ 50.000
+            COP</span></span>
       </div>
       <div class="announcement-item">
         <span>🌱</span>
@@ -41,8 +46,8 @@
   <header class="site-header">
     <div class="container header-inner">
       <!-- Logotipo y Nombre -->
-      <a href="#" class="logo-link" aria-label="Inicio - Supermercado Verde">
-        <img src="assets/logo.svg" alt="Supermercado Verde" class="logo-img">
+      <a href="#" class="logo-link" aria-label="Inicio - Supermercado La Casona">
+        <img src="assets/logo.svg" alt="Supermercado La Casona" class="logo-img">
       </a>
 
       <!-- Buscador Central -->
@@ -50,19 +55,15 @@
         <form class="search-form" id="search-form" role="search" onsubmit="event.preventDefault();">
           <label for="search-input" class="sr-only">Buscar en el supermercado</label>
           <button type="submit" class="search-icon-btn" aria-label="Buscar">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
           </button>
-          <input 
-            type="search" 
-            id="search-input" 
-            class="search-input" 
-            placeholder="Buscar manzana, leche, café, pechuga..." 
-            autocomplete="off"
-            aria-label="Buscar productos por nombre"
-          >
+          <input type="search" id="search-input" class="search-input"
+            placeholder="Buscar manzana, leche, café, pechuga..." autocomplete="off"
+            aria-label="Buscar productos por nombre">
           <button type="button" id="clear-search-btn" class="search-clear-btn" aria-label="Limpiar búsqueda" hidden>
             &times;
           </button>
@@ -75,16 +76,55 @@
           <li><a href="#hero" class="nav-link active">Inicio</a></li>
           <li><a href="#categorias" class="nav-link">Categorías</a></li>
           <li><a href="#catalogo" class="nav-link">Catálogo</a></li>
-          <li><button type="button" id="filter-offers-nav" class="nav-link" style="background:none;border:none;cursor:pointer;">Ofertas 🔥</button></li>
+          <li><button type="button" id="filter-offers-nav" class="nav-link"
+              style="background:none;border:none;cursor:pointer;">Ofertas 🔥</button></li>
+          <!-- Sección de Login en el Menú de Navegación -->
+          <li class="nav-auth-item">
+            <button type="button" class="nav-link nav-login-link" id="nav-login-btn">
+              <span class="nav-login-icon" aria-hidden="true">👤</span>
+              <span id="nav-login-text">Iniciar sesión</span>
+            </button>
+          </li>
         </ul>
       </nav>
 
-      <!-- Botones de Acción (Favoritos y Carrito) -->
+      <!-- Botones de Acción (Usuario, Favoritos y Carrito) -->
       <div class="header-actions">
         <!-- Botón Móvil de Búsqueda -->
         <button type="button" class="mobile-toggle-btn" id="mobile-search-toggle" aria-label="Abrir buscador móvil">
           🔍
         </button>
+
+        <!-- Menú / Botón de Usuario en la cabecera -->
+        <div class="user-menu-wrapper" id="user-menu-wrapper">
+          <button type="button" class="action-btn user-action-btn" id="header-user-btn" aria-label="Mi Cuenta"
+            aria-haspopup="true" aria-expanded="false">
+            <span class="user-avatar-badge" id="user-avatar-badge" aria-hidden="true">👤</span>
+            <span class="action-btn-text" id="header-user-text">Ingresar</span>
+          </button>
+
+          <!-- Menú desplegable cuando el usuario ha iniciado sesión -->
+          <div class="user-dropdown-menu" id="user-dropdown-menu" role="menu" aria-hidden="true">
+            <div class="dropdown-user-info">
+              <div class="dropdown-avatar" id="dropdown-avatar">CR</div>
+              <div class="dropdown-details">
+                <strong id="dropdown-user-name">Usuario</strong>
+                <span id="dropdown-user-email">usuario@ejemplo.com</span>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <button type="button" class="dropdown-item" id="btn-dropdown-profile" role="menuitem">
+              <span aria-hidden="true">📝</span> Mis datos y direcciones
+            </button>
+            <button type="button" class="dropdown-item" id="btn-dropdown-orders" role="menuitem">
+              <span aria-hidden="true">📦</span> Mis pedidos simulados
+            </button>
+            <div class="dropdown-divider"></div>
+            <button type="button" class="dropdown-item dropdown-logout-btn" id="btn-dropdown-logout" role="menuitem">
+              <span aria-hidden="true">🚪</span> Cerrar sesión
+            </button>
+          </div>
+        </div>
 
         <!-- Botón Favoritos -->
         <button type="button" class="action-btn" id="fav-toggle-btn" aria-label="Ver productos favoritos">
@@ -94,7 +134,8 @@
         </button>
 
         <!-- Botón Carrito de Compras -->
-        <button type="button" class="action-btn cart-action-btn" id="cart-toggle-btn" aria-label="Abrir carrito de compras">
+        <button type="button" class="action-btn cart-action-btn" id="cart-toggle-btn"
+          aria-label="Abrir carrito de compras">
           <span aria-hidden="true">🛒</span>
           <span class="action-btn-text">Carrito</span>
           <span class="badge-count" id="cart-badge-count">0</span>
@@ -114,7 +155,8 @@
             <span class="hero-badge-tag">🌿 Cosecha Fresca de Temporada</span>
             <h1 class="hero-title">Tu mercado campesino, directo a tu <span>hogar</span></h1>
             <p class="hero-subtitle">
-              Disfruta de frutas y verduras frescas, carnes seleccionadas y los productos de la canasta familiar con la mejor calidad y precios justos en pesos colombianos.
+              Disfruta de frutas y verduras frescas, carnes seleccionadas y los productos de la canasta familiar con la
+              mejor calidad y precios justos en pesos colombianos.
             </p>
             <div class="hero-actions">
               <a href="#catalogo" class="btn btn-primary" id="hero-cta-btn">
@@ -223,7 +265,8 @@
         <div class="empty-state" id="empty-state" style="display: none;" role="status">
           <span class="empty-state-icon" aria-hidden="true">🔍</span>
           <h3 class="empty-state-title">No encontramos productos coincidentes</h3>
-          <p class="empty-state-text">Intenta con otro término de búsqueda o selecciona otra categoría de nuestro catálogo.</p>
+          <p class="empty-state-text">Intenta con otro término de búsqueda o selecciona otra categoría de nuestro
+            catálogo.</p>
           <button type="button" class="btn btn-primary" id="reset-filters-btn">
             Ver todos los productos
           </button>
@@ -237,8 +280,9 @@
        6. CARRITO LATERAL (DRAWER / OFF-CANVAS) - Sección 6.6
        ========================================================================== -->
   <div class="cart-backdrop" id="cart-backdrop" aria-hidden="true"></div>
-  
-  <aside class="cart-drawer" id="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="cart-drawer-title" aria-hidden="true">
+
+  <aside class="cart-drawer" id="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="cart-drawer-title"
+    aria-hidden="true">
     <div class="drawer-header">
       <div class="drawer-title-group">
         <span aria-hidden="true">🛒</span>
@@ -297,7 +341,8 @@
   <!-- ==========================================================================
        7. MODAL DE FAVORITOS
        ========================================================================== -->
-  <div class="modal-backdrop" id="favorites-modal" role="dialog" aria-modal="true" aria-labelledby="fav-modal-title" aria-hidden="true">
+  <div class="modal-backdrop" id="favorites-modal" role="dialog" aria-modal="true" aria-labelledby="fav-modal-title"
+    aria-hidden="true">
     <div class="modal-card">
       <div class="modal-header">
         <h2 id="fav-modal-title" class="modal-title">Tus Productos Favoritos ❤️</h2>
@@ -314,7 +359,8 @@
   <!-- ==========================================================================
        8. MODAL DE COMPRA SIMULADA (CHECKOUT PROTOTIPO)
        ========================================================================== -->
-  <div class="modal-backdrop" id="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-modal-title" aria-hidden="true">
+  <div class="modal-backdrop" id="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-modal-title"
+    aria-hidden="true">
     <div class="modal-card">
       <div class="modal-header">
         <h2 id="checkout-modal-title" class="modal-title">Simulación de Pedido 🛒</h2>
@@ -354,7 +400,8 @@
 
             <div class="form-group">
               <label for="checkout-address" class="form-label">Dirección de entrega *</label>
-              <input type="text" id="checkout-address" class="form-input" placeholder="Ej. Carrera 15 # 85-32 Apto 402" required>
+              <input type="text" id="checkout-address" class="form-input" placeholder="Ej. Carrera 15 # 85-32 Apto 402"
+                required>
             </div>
 
             <div class="form-group">
@@ -381,11 +428,14 @@
 
             <div class="form-group">
               <label for="checkout-notes" class="form-label">Instrucciones para el domiciliario (opcional)</label>
-              <textarea id="checkout-notes" class="form-textarea" rows="2" placeholder="Ej. Timbrar en portería, dejar con el vigilante..."></textarea>
+              <textarea id="checkout-notes" class="form-textarea" rows="2"
+                placeholder="Ej. Timbrar en portería, dejar con el vigilante..."></textarea>
             </div>
 
-            <div style="background-color: var(--color-bg-warm); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 18px;">
-              <div style="display: flex; justify-content: space-between; font-weight: bold; color: var(--color-primary-dark);">
+            <div
+              style="background-color: var(--color-bg-warm); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 18px;">
+              <div
+                style="display: flex; justify-content: space-between; font-weight: bold; color: var(--color-primary-dark);">
                 <span>Total a confirmar:</span>
                 <span id="checkout-modal-total">$ 0</span>
               </div>
@@ -406,15 +456,162 @@
             Hemos registrado tu orden de demostración con éxito.
           </p>
           <div class="order-code-badge" id="order-code-display">
-            ORDEN #SV-2026-7842
+            ORDEN #LC-2026-7842
           </div>
-          <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 20px;" id="order-summary-details">
+          <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 20px;"
+            id="order-summary-details">
             Entrega estimada en 90 minutos en tu dirección.
           </p>
           <button type="button" class="btn btn-primary" id="success-done-btn" style="width: 100%;">
             Seguir explorando el supermercado
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL DE INICIO DE SESIÓN / REGISTRO DE USUARIO
+       ========================================================================== -->
+  <div class="modal-backdrop" id="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-modal-title"
+    aria-hidden="true">
+    <div class="modal-card auth-modal-card">
+      <div class="modal-header">
+        <h2 id="login-modal-title" class="modal-title">Mi Cuenta en Supermercado La Casona</h2>
+        <button type="button" class="drawer-close-btn" id="close-login-btn" aria-label="Cerrar ventana">
+          &times;
+        </button>
+      </div>
+
+      <!-- Pestañas Iniciar Sesión / Crear Cuenta -->
+      <div class="auth-tabs-container">
+        <div class="auth-tabs" role="tablist">
+          <button type="button" class="auth-tab-btn active" id="tab-login-btn" role="tab" aria-selected="true"
+            aria-controls="auth-login-panel">
+            <span>🔐</span> Iniciar sesión
+          </button>
+          <button type="button" class="auth-tab-btn" id="tab-register-btn" role="tab" aria-selected="false"
+            aria-controls="auth-register-panel">
+            <span>✨</span> Crear cuenta
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <!-- 1. Panel de Iniciar Sesión -->
+        <div class="auth-panel" id="auth-login-panel" role="tabpanel" aria-labelledby="tab-login-btn">
+          <!-- Botón de acceso rápido de demostración -->
+          <div class="demo-login-box">
+            <div class="demo-badge">🚀 Acceso Rápido de Prueba</div>
+            <p class="demo-login-text">Ingresa inmediatamente con nuestra cuenta de demostración:</p>
+            <button type="button" class="btn btn-secondary demo-quick-btn" id="btn-quick-demo">
+              <span>👤 Ingresar como Carlos Restrepo</span>
+            </button>
+          </div>
+
+          <div class="auth-divider">
+            <span>o con tus credenciales</span>
+          </div>
+
+          <form id="login-form">
+            <div class="form-group">
+              <label for="login-email" class="form-label">Correo electrónico *</label>
+              <input type="email" id="login-email" class="form-input" placeholder="ejemplo@correo.com" required
+                autocomplete="email">
+            </div>
+
+            <div class="form-group">
+              <div class="form-label-row">
+                <label for="login-password" class="form-label">Contraseña *</label>
+                <button type="button" class="link-btn-subtle" id="btn-forgot-password">¿Olvidaste tu
+                  contraseña?</button>
+              </div>
+              <div class="password-wrapper">
+                <input type="password" id="login-password" class="form-input" placeholder="••••••••" required
+                  autocomplete="current-password">
+                <button type="button" class="password-toggle-btn" id="toggle-login-pass"
+                  aria-label="Mostrar contraseña">👁️</button>
+              </div>
+            </div>
+
+            <div class="checkbox-row">
+              <label class="custom-checkbox-label">
+                <input type="checkbox" id="login-remember" checked>
+                <span>Recordar sesión en este navegador</span>
+              </label>
+            </div>
+
+            <button type="submit" class="cart-checkout-btn" style="width: 100%; margin-top: 14px;">
+              <span>Iniciar Sesión</span>
+              <span aria-hidden="true">→</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- 2. Panel de Crear Cuenta -->
+        <div class="auth-panel" id="auth-register-panel" role="tabpanel" aria-labelledby="tab-register-btn"
+          style="display: none;">
+          <form id="register-form">
+            <div class="form-group">
+              <label for="reg-name" class="form-label">Nombre y apellido *</label>
+              <input type="text" id="reg-name" class="form-input" placeholder="Ej. Mariana Ospina" required
+                autocomplete="name">
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="reg-email" class="form-label">Correo electrónico *</label>
+                <input type="email" id="reg-email" class="form-input" placeholder="mariana@correo.com" required
+                  autocomplete="email">
+              </div>
+              <div class="form-group">
+                <label for="reg-phone" class="form-label">Teléfono celular *</label>
+                <input type="tel" id="reg-phone" class="form-input" placeholder="315 123 4567" required
+                  autocomplete="tel">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="reg-password" class="form-label">Crear contraseña *</label>
+              <div class="password-wrapper">
+                <input type="password" id="reg-password" class="form-input" placeholder="Mínimo 6 caracteres"
+                  minlength="6" required autocomplete="new-password">
+                <button type="button" class="password-toggle-btn" id="toggle-reg-pass"
+                  aria-label="Mostrar contraseña">👁️</button>
+              </div>
+            </div>
+
+            <div class="checkbox-row">
+              <label class="custom-checkbox-label">
+                <input type="checkbox" id="reg-terms" required>
+                <span>Acepto los términos de servicio y políticas de Supermercado La Casona</span>
+              </label>
+            </div>
+
+            <button type="submit" class="cart-checkout-btn" style="width: 100%; margin-top: 14px;">
+              <span>Crear mi cuenta</span>
+              <span aria-hidden="true">✓</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL DE PERFIL Y PEDIDOS DEL USUARIO
+       ========================================================================== -->
+  <div class="modal-backdrop" id="profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title"
+    aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="profile-modal-title" class="modal-title">Mi Perfil y Pedidos</h2>
+        <button type="button" class="drawer-close-btn" id="close-profile-btn" aria-label="Cerrar perfil">
+          &times;
+        </button>
+      </div>
+      <div class="modal-body" id="profile-modal-body">
+        <!-- Inyectado dinámicamente con JavaScript -->
       </div>
     </div>
   </div>
@@ -431,17 +628,20 @@
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <img src="assets/logo.svg" alt="Supermercado Verde" style="height: 44px; filter: brightness(0) invert(1);">
+          <img src="assets/logo.svg" alt="Supermercado La Casona" style="height: 44px; filter: brightness(0) invert(1);">
           <p>
-            Tu supermercado virtual de confianza en Colombia. Productos frescos, precios justos y una experiencia de compra diseñada para simplificar tu vida.
+            Tu supermercado virtual de confianza en Colombia. Productos frescos, precios justos y una experiencia de
+            compra diseñada para simplificar tu vida.
           </p>
         </div>
 
         <div>
           <h3 class="footer-heading">Categorías</h3>
           <ul class="footer-links">
-            <li><a href="#catalogo" class="footer-link" onclick="app.setCategory('Frutas y verduras')">Frutas y verduras</a></li>
-            <li><a href="#catalogo" class="footer-link" onclick="app.setCategory('Carnes y huevos')">Carnes y huevos</a></li>
+            <li><a href="#catalogo" class="footer-link" onclick="app.setCategory('Frutas y verduras')">Frutas y
+                verduras</a></li>
+            <li><a href="#catalogo" class="footer-link" onclick="app.setCategory('Carnes y huevos')">Carnes y huevos</a>
+            </li>
             <li><a href="#catalogo" class="footer-link" onclick="app.setCategory('Lácteos')">Lácteos</a></li>
             <li><a href="#catalogo" class="footer-link" onclick="app.setCategory('Panadería')">Panadería</a></li>
             <li><a href="#catalogo" class="footer-link" onclick="app.setCategory('Despensa')">Despensa</a></li>
@@ -470,7 +670,8 @@
       </div>
 
       <div class="footer-bottom">
-        <p>&copy; 2026 Supermercado Verde. Todos los derechos reservados. Prototipo funcional frontend desarrollado con HTML5, CSS3 y JavaScript ES6+.</p>
+        <p>&copy; 2026 Supermercado La Casona. Todos los derechos reservados. Prototipo funcional frontend desarrollado con
+          HTML5, CSS3 y JavaScript ES6+.</p>
         <p>Inspirado en referentes de comercio electrónico y usabilidad Baymard Institute.</p>
       </div>
     </div>
@@ -480,4 +681,5 @@
   <script src="js/products.js"></script>
   <script src="js/app.js"></script>
 </body>
+
 </html>

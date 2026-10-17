@@ -1,5 +1,5 @@
 /**
- * Supermercado Verde - Catálogo de productos de demostración
+ * Supermercado La Casona - Catálogo de productos de demostración
  * Precios en pesos colombianos (COP)
  */
 

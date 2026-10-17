@@ -1,19 +1,19 @@
 /* ==========================================================================
-   SUPERMERCADO VERDE - HOJA DE ESTILOS PRINCIPAL
+   SUPERMERCADO LA CASONA - HOJA DE ESTILOS PRINCIPAL
    Identidad visual, diseño responsive, componentes interactivos y accesibilidad
    ========================================================================== */
 
 :root {
-  /* Paleta cromática oficial (Sección 6.1 de la Especificación) */
-  --color-primary-dark: #163D2A;        /* Marca, encabezados y botones principales */
-  --color-primary: #2E7D4F;             /* Acciones y elementos interactivos */
-  --color-primary-hover: #23653F;       /* Hover de botones principales */
-  --color-primary-light: #EAF5EC;       /* Fondos de promociones y categorías */
-  --color-primary-subtle: #F0F8F2;      /* Tonos de realce suave */
-  --color-bg-warm: #F7F8F5;             /* Fondo general y superficies neutras */
+  /* Paleta cromática oficial - Rojo Colonial y Acento Dorado */
+  --color-primary-dark: #7A1318;        /* Marca, encabezados y botones principales */
+  --color-primary: #C92A34;             /* Acciones y elementos interactivos (Rojo vibrante) */
+  --color-primary-hover: #A51B24;       /* Hover de botones principales */
+  --color-primary-light: #FDECEE;       /* Fondos de promociones y categorías */
+  --color-primary-subtle: #FFF5F6;      /* Tonos de realce suave */
+  --color-bg-warm: #FAF8F5;             /* Fondo general y superficies neutras */
   --color-surface: #FFFFFF;             /* Superficie de tarjetas y modales */
   --color-accent-orange: #D97706;       /* Promociones y etiquetas de oferta */
-  --color-accent-orange-hover: #B45309; /* Hover naranja */
+  --color-accent-orange-hover: #B45309; /* Hover naranja/dorado */
   --color-accent-orange-light: #FEF3C7; /* Fondo etiquetas de oferta */
   --color-danger: #DC2626;              /* Alertas y eliminar */
   --color-danger-light: #FEE2E2;        /* Fondo alertas */
@@ -29,10 +29,10 @@
   
   /* Sombras y elevaciones */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 2px 4px rgba(22, 61, 42, 0.06);
-  --shadow-md: 0 4px 12px rgba(22, 61, 42, 0.08);
-  --shadow-lg: 0 10px 25px rgba(22, 61, 42, 0.12);
-  --shadow-xl: 0 20px 40px rgba(22, 61, 42, 0.18);
+  --shadow-sm: 0 2px 4px rgba(122, 19, 24, 0.06);
+  --shadow-md: 0 4px 12px rgba(122, 19, 24, 0.08);
+  --shadow-lg: 0 10px 25px rgba(122, 19, 24, 0.12);
+  --shadow-xl: 0 20px 40px rgba(122, 19, 24, 0.18);
 
   /* Radios de borde */
   --radius-xs: 4px;
@@ -221,7 +221,7 @@ body {
 .search-input:focus {
   background-color: #FFFFFF;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(46, 125, 79, 0.15);
+  box-shadow: 0 0 0 3px rgba(201, 42, 52, 0.15);
   outline: none;
 }
 
@@ -380,7 +380,7 @@ body {
 }
 
 .hero-banner {
-  background: linear-gradient(135deg, #163D2A 0%, #1e5238 60%, #2E7D4F 100%);
+  background: linear-gradient(135deg, #7A1318 0%, #A51B24 55%, #C92A34 100%);
   border-radius: var(--radius-xl);
   color: #FFFFFF;
   padding: 44px 48px;
@@ -401,7 +401,7 @@ body {
   right: -80px;
   width: 320px;
   height: 320px;
-  background: radial-gradient(circle, rgba(234, 245, 236, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+  background: radial-gradient(circle, rgba(253, 236, 238, 0.22) 0%, rgba(255, 255, 255, 0) 70%);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -410,9 +410,9 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background-color: rgba(234, 245, 236, 0.18);
-  border: 1px solid rgba(234, 245, 236, 0.3);
-  color: #EAF5EC;
+  background-color: rgba(253, 236, 238, 0.2);
+  border: 1px solid rgba(253, 236, 238, 0.35);
+  color: #FDECEE;
   font-size: 0.85rem;
   font-weight: 700;
   padding: 6px 14px;
@@ -437,7 +437,7 @@ body {
 .hero-subtitle {
   font-size: 1.05rem;
   line-height: 1.5;
-  color: #EAF5EC;
+  color: #FDECEE;
   margin-bottom: 28px;
   max-width: 480px;
   opacity: 0.95;
@@ -625,7 +625,7 @@ body {
   background-color: var(--color-primary);
   border-color: var(--color-primary);
   color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(46, 125, 79, 0.25);
+  box-shadow: 0 4px 12px rgba(201, 42, 52, 0.25);
 }
 
 .category-chip.active .category-name {
@@ -795,7 +795,7 @@ body {
 .product-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-md);
-  border-color: #BBE1C8;
+  border-color: #FCA5A5;
 }
 
 /* Encabezado superior de la tarjeta (Badges y Favorito) */
@@ -831,7 +831,7 @@ body {
 }
 
 .badge-status {
-  background-color: rgba(22, 61, 42, 0.85);
+  background-color: rgba(122, 19, 24, 0.88);
   color: #FFFFFF;
   font-size: 0.7rem;
   font-weight: 700;
@@ -1077,7 +1077,7 @@ body {
 .cart-backdrop {
   position: fixed;
   inset: 0;
-  background-color: rgba(22, 61, 42, 0.55);
+  background-color: rgba(122, 19, 24, 0.6);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: 200;
@@ -1158,7 +1158,7 @@ body {
   background-color: var(--color-primary-light);
   padding: 12px 20px;
   font-size: 0.85rem;
-  border-bottom: 1px solid #D5EBD9;
+  border-bottom: 1px solid #FECDD3;
 }
 
 .shipping-progress-text {
@@ -1172,7 +1172,7 @@ body {
 .shipping-bar-track {
   width: 100%;
   height: 8px;
-  background-color: rgba(46, 125, 79, 0.2);
+  background-color: rgba(201, 42, 52, 0.18);
   border-radius: var(--radius-full);
   overflow: hidden;
 }
@@ -1360,7 +1360,7 @@ body {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background-color: rgba(22, 61, 42, 0.6);
+  background-color: rgba(122, 19, 24, 0.65);
   backdrop-filter: blur(4px);
   z-index: 300;
   display: flex;
@@ -1442,7 +1442,7 @@ body {
 .form-input:focus, .form-select:focus, .form-textarea:focus {
   border-color: var(--color-primary);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(46, 125, 79, 0.12);
+  box-shadow: 0 0 0 3px rgba(201, 42, 52, 0.14);
 }
 
 .form-grid-2 {
@@ -1581,7 +1581,7 @@ body {
 }
 
 .footer-brand p {
-  color: #D1E5D7;
+  color: #FDECEE;
   font-size: 0.9rem;
   line-height: 1.6;
   margin-top: 14px;
@@ -1604,7 +1604,7 @@ body {
 }
 
 .footer-link {
-  color: #D1E5D7;
+  color: #FDECEE;
   text-decoration: none;
   font-size: 0.88rem;
   transition: color var(--transition-fast);
@@ -1616,7 +1616,7 @@ body {
 
 .footer-contact-info {
   font-size: 0.88rem;
-  color: #D1E5D7;
+  color: #FDECEE;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1629,9 +1629,404 @@ body {
   justify-content: space-between;
   align-items: center;
   font-size: 0.82rem;
-  color: #9ECBB0;
+  color: #FCA5A5;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+/* ==========================================================================
+   12.1. SECCIÓN DE LOGIN EN NAVEGACIÓN Y MENÚ DE USUARIO
+   ========================================================================== */
+.nav-auth-item {
+  display: flex;
+  align-items: center;
+}
+
+.nav-login-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  border: 1.5px solid rgba(201, 42, 52, 0.25);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.nav-login-link:hover {
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-xs);
+}
+
+.nav-login-icon {
+  font-size: 1rem;
+}
+
+/* Envoltorio del menú de usuario en la cabecera */
+.user-menu-wrapper {
+  position: relative;
+}
+
+.user-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.user-avatar-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  font-size: 0.85rem;
+  font-weight: bold;
+  transition: all var(--transition-fast);
+}
+
+.user-action-btn.logged-in .user-avatar-badge {
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+}
+
+/* Menú desplegable del usuario autenticado */
+.user-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 250px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 8px;
+  z-index: 150;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all var(--transition-fast);
+}
+
+.user-dropdown-menu.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px;
+}
+
+.dropdown-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.dropdown-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dropdown-details strong {
+  font-size: 0.92rem;
+  color: var(--color-primary-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-details span {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: var(--color-border);
+  margin: 6px 0;
+}
+
+.dropdown-item {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all var(--transition-fast);
+}
+
+.dropdown-item:hover {
+  background-color: var(--color-bg-warm);
+  color: var(--color-primary);
+}
+
+.dropdown-logout-btn {
+  color: var(--color-danger);
+}
+
+.dropdown-logout-btn:hover {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+/* ==========================================================================
+   12.2. MODAL DE LOGIN / REGISTRO
+   ========================================================================== */
+.auth-modal-card {
+  max-width: 480px;
+}
+
+.auth-tabs-container {
+  background-color: var(--color-bg-warm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.auth-tabs {
+  display: flex;
+  width: 100%;
+}
+
+.auth-tab-btn {
+  flex: 1;
+  padding: 14px 16px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all var(--transition-fast);
+}
+
+.auth-tab-btn:hover {
+  color: var(--color-primary-dark);
+}
+
+.auth-tab-btn.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  background-color: #FFFFFF;
+}
+
+.demo-login-box {
+  background-color: var(--color-primary-light);
+  border: 1.5px dashed var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.demo-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--color-primary-dark);
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.demo-login-text {
+  font-size: 0.84rem;
+  color: var(--color-primary-dark);
+  margin-bottom: 10px;
+}
+
+.demo-quick-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #FFFFFF;
+  color: var(--color-primary-dark);
+  border: 1.5px solid var(--color-primary);
+  font-size: 0.88rem;
+  border-radius: var(--radius-full);
+}
+
+.demo-quick-btn:hover {
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+}
+
+.auth-divider {
+  position: relative;
+  text-align: center;
+  margin: 18px 0;
+}
+
+.auth-divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--color-border);
+}
+
+.auth-divider span {
+  position: relative;
+  background-color: #FFFFFF;
+  padding: 0 12px;
+  font-size: 0.8rem;
+  color: var(--color-text-light);
+}
+
+.form-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.link-btn-subtle {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.link-btn-subtle:hover {
+  color: var(--color-primary-hover);
+}
+
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper .form-input {
+  padding-right: 44px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkbox-row {
+  margin: 14px 0 6px;
+}
+
+.custom-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+/* Estilos de la tarjeta de perfil */
+.profile-card-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: var(--color-bg-warm);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.profile-avatar-large {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.profile-info-block strong {
+  display: block;
+  font-size: 1.1rem;
+  color: var(--color-primary-dark);
+}
+
+.profile-info-block span {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.profile-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-order-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  background-color: #FFFFFF;
+}
+
+.profile-order-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
 }
 
 /* ==========================================================================

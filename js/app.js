@@ -1,6 +1,6 @@
 /**
  * ==========================================================================
- * SUPERMERCADO VERDE - APLICACIÓN PRINCIPAL (js/app.js)
+ * SUPERMERCADO LA CASONA - APLICACIÓN PRINCIPAL (js/app.js)
  * Arquitectura basada en ES6+, modular, accesible y persistente con localStorage.
  * Cumple en su totalidad con la sección 7.5 de la Especificación Técnica.
  * ==========================================================================
@@ -13,6 +13,7 @@ const state = {
   filteredProducts: [],
   cart: [],
   favorites: [],
+  user: null,
   filterCategory: "all",
   searchQuery: "",
   onlyOffers: false,
@@ -23,8 +24,31 @@ const state = {
 
 // Claves de persistencia en localStorage
 const STORAGE_KEYS = {
-  CART: "supermercado_verde_cart",
-  FAVORITES: "supermercado_verde_favorites"
+  CART: "supermercado_casona_cart",
+  FAVORITES: "supermercado_casona_favorites",
+  USER: "supermercado_casona_user",
+  OLD_CART: "supermercado_verde_cart",
+  OLD_FAVORITES: "supermercado_verde_favorites",
+  OLD_USER: "supermercado_verde_user"
+};
+
+// Usuario de demostración preconfigurado
+const DEMO_USER = {
+  id: "usr_demo_1",
+  nombre: "Carlos Restrepo",
+  email: "carlos.restrepo@correo.com",
+  telefono: "312 456 7890",
+  ciudad: "Bogotá D.C.",
+  direccion: "Carrera 15 # 85-32 Apto 402",
+  pedidos: [
+    {
+      codigo: "ORDEN #LC-2026-3819",
+      fecha: "12 Oct 2026",
+      total: 42800,
+      estado: "Entregado",
+      items: "Manzana Roja x2, Leche Entera x2, Arepas x1"
+    }
+  ]
 };
 
 /**
@@ -57,12 +81,14 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initApp() {
+  loadUser();
   loadFavorites();
   loadCart();
   renderCategories();
   applyFiltersAndSort();
   bindEvents();
   updateBadges();
+  updateUserUI();
 }
 
 /* ==========================================================================
@@ -600,7 +626,7 @@ function saveCart() {
  */
 function loadCart() {
   try {
-    const data = localStorage.getItem(STORAGE_KEYS.CART);
+    const data = localStorage.getItem(STORAGE_KEYS.CART) || localStorage.getItem(STORAGE_KEYS.OLD_CART);
     if (data) {
       state.cart = JSON.parse(data);
     }
@@ -655,7 +681,7 @@ function saveFavorites() {
  */
 function loadFavorites() {
   try {
-    const data = localStorage.getItem(STORAGE_KEYS.FAVORITES);
+    const data = localStorage.getItem(STORAGE_KEYS.FAVORITES) || localStorage.getItem(STORAGE_KEYS.OLD_FAVORITES);
     if (data) {
       state.favorites = JSON.parse(data);
     }
@@ -817,6 +843,18 @@ function openCheckout() {
   const { total } = calculateTotal();
   if (modalTotal) modalTotal.textContent = formatCOP(total);
 
+  // Autocompletar datos del usuario si ha iniciado sesión
+  if (state.user) {
+    const nameInput = document.getElementById("checkout-name");
+    const phoneInput = document.getElementById("checkout-phone");
+    const addressInput = document.getElementById("checkout-address");
+    const citySelect = document.getElementById("checkout-city");
+    if (nameInput) nameInput.value = state.user.nombre || "";
+    if (phoneInput) phoneInput.value = state.user.telefono || "";
+    if (addressInput) addressInput.value = state.user.direccion || "";
+    if (citySelect && state.user.ciudad) citySelect.value = state.user.ciudad;
+  }
+
   if (formContainer) formContainer.style.display = "block";
   if (successContainer) successContainer.style.display = "none";
 
@@ -857,7 +895,9 @@ function handleCheckoutSubmit(e) {
   const summaryDetails = document.getElementById("order-summary-details");
 
   const randomOrderNum = Math.floor(1000 + Math.random() * 9000);
-  const orderCode = `ORDEN #SV-2026-${randomOrderNum}`;
+  const orderCode = `ORDEN #LC-2026-${randomOrderNum}`;
+
+  const { total } = calculateTotal();
 
   if (orderCodeDisplay) orderCodeDisplay.textContent = orderCode;
   if (summaryDetails) {
@@ -867,6 +907,19 @@ function handleCheckoutSubmit(e) {
   if (formContainer) formContainer.style.display = "none";
   if (successContainer) successContainer.style.display = "block";
 
+  // Si hay usuario autenticado, guardar en su historial de pedidos
+  if (state.user) {
+    if (!state.user.pedidos) state.user.pedidos = [];
+    state.user.pedidos.unshift({
+      codigo: orderCode,
+      fecha: new Date().toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" }),
+      total: total,
+      estado: "En preparación",
+      items: state.cart.map(i => `${i.nombre} x${i.quantity}`).join(", ")
+    });
+    saveUser();
+  }
+
   // Vaciar carrito tras simulación exitosa
   state.cart = [];
   saveCart();
@@ -874,6 +927,284 @@ function handleCheckoutSubmit(e) {
   updateBadges();
 
   showToast("¡Pedido simulado registrado exitosamente!", "success");
+}
+
+/* ==========================================================================
+   7.1. GESTIÓN DE SESIÓN DE USUARIO Y MODALES DE LOGIN
+   ========================================================================== */
+
+/**
+ * Carga el usuario desde localStorage
+ */
+function loadUser() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEYS.USER) || localStorage.getItem(STORAGE_KEYS.OLD_USER);
+    if (data) {
+      state.user = JSON.parse(data);
+    }
+  } catch (e) {
+    state.user = null;
+  }
+}
+
+/**
+ * Guarda el usuario en localStorage
+ */
+function saveUser() {
+  try {
+    if (state.user) {
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(state.user));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.USER);
+    }
+  } catch (e) {
+    console.warn("No se pudo guardar el usuario en localStorage", e);
+  }
+}
+
+/**
+ * Inicia sesión con los datos de usuario
+ */
+function loginUser(userData) {
+  state.user = userData;
+  saveUser();
+  updateUserUI();
+  closeLoginModal();
+  showToast(`¡Bienvenido, ${userData.nombre.split(" ")[0]}! 👋`, "success");
+}
+
+/**
+ * Cierra la sesión activa
+ */
+function logoutUser() {
+  const firstName = state.user ? state.user.nombre.split(" ")[0] : "Usuario";
+  state.user = null;
+  saveUser();
+  updateUserUI();
+  closeUserDropdown();
+  closeProfileModal();
+  showToast(`Sesión cerrada. ¡Hasta pronto, ${firstName}!`, "info");
+}
+
+/**
+ * Actualiza todos los elementos de la interfaz relacionados al usuario
+ */
+function updateUserUI() {
+  const navLoginText = document.getElementById("nav-login-text");
+  const headerUserText = document.getElementById("header-user-text");
+  const headerUserBtn = document.getElementById("header-user-btn");
+  const userAvatarBadge = document.getElementById("user-avatar-badge");
+  const dropdownAvatar = document.getElementById("dropdown-avatar");
+  const dropdownName = document.getElementById("dropdown-name");
+  const dropdownEmail = document.getElementById("dropdown-email");
+
+  if (state.user) {
+    const firstName = state.user.nombre.split(" ")[0];
+    const initials = state.user.nombre
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(n => n[0].toUpperCase())
+      .join("");
+
+    if (navLoginText) navLoginText.textContent = firstName;
+    if (headerUserText) headerUserText.textContent = firstName;
+    if (headerUserBtn) {
+      headerUserBtn.classList.add("logged-in");
+      headerUserBtn.setAttribute("aria-label", `Mi Cuenta (${state.user.nombre})`);
+    }
+    if (userAvatarBadge) userAvatarBadge.textContent = initials || "✓";
+    if (dropdownAvatar) dropdownAvatar.textContent = initials || "CR";
+    if (dropdownName) dropdownName.textContent = state.user.nombre;
+    if (dropdownEmail) dropdownEmail.textContent = state.user.email;
+  } else {
+    if (navLoginText) navLoginText.textContent = "Iniciar sesión";
+    if (headerUserText) headerUserText.textContent = "Ingresar";
+    if (headerUserBtn) {
+      headerUserBtn.classList.remove("logged-in");
+      headerUserBtn.setAttribute("aria-label", "Iniciar sesión");
+    }
+    if (userAvatarBadge) userAvatarBadge.textContent = "👤";
+  }
+}
+
+/**
+ * Abre el modal de inicio de sesión o registro
+ */
+function openLoginModal(tab = "login") {
+  closeUserDropdown();
+  const modal = document.getElementById("login-modal");
+  const tabLoginBtn = document.getElementById("tab-login-btn");
+  const tabRegBtn = document.getElementById("tab-register-btn");
+  const panelLogin = document.getElementById("auth-login-panel");
+  const panelReg = document.getElementById("auth-register-panel");
+
+  if (!modal) return;
+
+  if (tab === "register") {
+    if (tabLoginBtn) tabLoginBtn.classList.remove("active");
+    if (tabRegBtn) tabRegBtn.classList.add("active");
+    if (panelLogin) panelLogin.style.display = "none";
+    if (panelReg) panelReg.style.display = "block";
+  } else {
+    if (tabLoginBtn) tabLoginBtn.classList.add("active");
+    if (tabRegBtn) tabRegBtn.classList.remove("active");
+    if (panelLogin) panelLogin.style.display = "block";
+    if (panelReg) panelReg.style.display = "none";
+  }
+
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+/**
+ * Cierra el modal de inicio de sesión
+ */
+function closeLoginModal() {
+  const modal = document.getElementById("login-modal");
+  if (modal) {
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+}
+
+/**
+ * Abre / cierra el menú desplegable del usuario
+ */
+function toggleUserDropdown() {
+  const menu = document.getElementById("user-dropdown-menu");
+  const btn = document.getElementById("header-user-btn");
+  if (!menu) return;
+
+  const isOpen = menu.classList.contains("open");
+  if (isOpen) {
+    closeUserDropdown();
+  } else {
+    menu.classList.add("open");
+    menu.setAttribute("aria-hidden", "false");
+    if (btn) btn.setAttribute("aria-expanded", "true");
+  }
+}
+
+function closeUserDropdown() {
+  const menu = document.getElementById("user-dropdown-menu");
+  const btn = document.getElementById("header-user-btn");
+  if (menu) {
+    menu.classList.remove("open");
+    menu.setAttribute("aria-hidden", "true");
+  }
+  if (btn) btn.setAttribute("aria-expanded", "false");
+}
+
+/**
+ * Abre el modal de perfil
+ */
+function openProfileModal() {
+  closeUserDropdown();
+  const modal = document.getElementById("profile-modal");
+  if (modal) {
+    renderProfileModal();
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+}
+
+/**
+ * Cierra el modal de perfil
+ */
+function closeProfileModal() {
+  const modal = document.getElementById("profile-modal");
+  if (modal) {
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+}
+
+/**
+ * Renderiza el modal de perfil y pedidos del usuario
+ */
+function renderProfileModal() {
+  const body = document.getElementById("profile-modal-body");
+  if (!body) return;
+
+  if (!state.user) {
+    body.innerHTML = `
+      <div class="empty-state" style="padding: 30px 10px; border: none;">
+        <span class="empty-state-icon" aria-hidden="true">👤</span>
+        <h3 class="empty-state-title" style="font-size: 1.15rem;">No has iniciado sesión</h3>
+        <p class="empty-state-text" style="font-size: 0.88rem;">Inicia sesión para consultar tus datos guardados y el historial de compras.</p>
+        <button type="button" class="btn btn-primary" onclick="app.closeProfileModal(); app.openLoginModal('login');">
+          Iniciar sesión
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  const initials = state.user.nombre
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(n => n[0].toUpperCase())
+    .join("");
+
+  const orders = state.user.pedidos || [];
+
+  body.innerHTML = `
+    <div>
+      <div class="profile-card-header">
+        <div class="profile-avatar-large">${escapeHTML(initials)}</div>
+        <div class="profile-info-block">
+          <strong>${escapeHTML(state.user.nombre)}</strong>
+          <span>${escapeHTML(state.user.email)}</span>
+          <span style="display: block; margin-top: 4px; font-size: 0.82rem; color: var(--color-primary); font-weight: bold;">
+            📍 ${escapeHTML(state.user.direccion || "Dirección no registrada")}, ${escapeHTML(state.user.ciudad || "Colombia")}
+          </span>
+        </div>
+      </div>
+
+      <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--color-primary-dark); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+        <span>Historial de pedidos simulados</span>
+        <span class="badge-status">${orders.length} pedidos</span>
+      </h3>
+
+      ${orders.length === 0 ? `
+        <p style="font-size: 0.88rem; color: var(--color-text-muted); padding: 12px 0;">Aún no has simulado pedidos con esta cuenta.</p>
+      ` : `
+        <div class="profile-orders-list">
+          ${orders.map(o => `
+            <div class="profile-order-card">
+              <div class="profile-order-header">
+                <strong style="color: var(--color-primary-dark); font-family: monospace;">${escapeHTML(o.codigo)}</strong>
+                <span class="badge-offer" style="background-color: var(--color-primary); font-size: 0.7rem;">${escapeHTML(o.estado)}</span>
+              </div>
+              <p style="font-size: 0.82rem; color: var(--color-text-muted); margin-bottom: 6px;">
+                ${escapeHTML(o.items)}
+              </p>
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
+                <span style="color: var(--color-text-light); font-size: 0.78rem;">Fecha: ${escapeHTML(o.fecha)}</span>
+                <strong style="color: var(--color-primary-dark); font-size: 0.95rem;">Total: ${formatCOP(o.total)}</strong>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `}
+
+      <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+        <button type="button" class="btn btn-secondary" onclick="app.closeProfileModal();" style="color: var(--color-text-main); border-color: var(--color-border);">
+          Cerrar
+        </button>
+        <button type="button" class="btn btn-primary" onclick="app.logoutUser();" style="background-color: var(--color-danger); border-color: var(--color-danger);">
+          <span>Cerrar sesión</span>
+          <span aria-hidden="true">🚪</span>
+        </button>
+      </div>
+    </div>
+  `;
 }
 
 /**
@@ -984,6 +1315,158 @@ function bindEvents() {
     });
   }
 
+  // Eventos de usuario y autenticación (Login en barra de navegación y cabecera)
+  const navLoginBtn = document.getElementById("nav-login-btn");
+  const headerUserBtn = document.getElementById("header-user-btn");
+  const closeLoginBtn = document.getElementById("close-login-btn");
+  const loginModal = document.getElementById("login-modal");
+  const tabLoginBtn = document.getElementById("tab-login-btn");
+  const tabRegisterBtn = document.getElementById("tab-register-btn");
+  const btnQuickDemo = document.getElementById("btn-quick-demo");
+  const loginForm = document.getElementById("login-form");
+  const registerForm = document.getElementById("register-form");
+  const toggleLoginPass = document.getElementById("toggle-login-pass");
+  const toggleRegPass = document.getElementById("toggle-reg-pass");
+  const btnForgotPass = document.getElementById("btn-forgot-password");
+
+  // Botón login en menú de navegación
+  if (navLoginBtn) {
+    navLoginBtn.addEventListener("click", () => {
+      if (state.user) {
+        openProfileModal();
+      } else {
+        openLoginModal("login");
+      }
+    });
+  }
+
+  // Botón usuario en acciones de cabecera
+  if (headerUserBtn) {
+    headerUserBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (state.user) {
+        toggleUserDropdown();
+      } else {
+        openLoginModal("login");
+      }
+    });
+  }
+
+  // Cierre de modal de login
+  if (closeLoginBtn) closeLoginBtn.addEventListener("click", closeLoginModal);
+  if (loginModal) {
+    loginModal.addEventListener("click", (e) => {
+      if (e.target === loginModal) closeLoginModal();
+    });
+  }
+
+  // Pestañas Iniciar sesión / Crear cuenta
+  if (tabLoginBtn) tabLoginBtn.addEventListener("click", () => openLoginModal("login"));
+  if (tabRegisterBtn) tabRegisterBtn.addEventListener("click", () => openLoginModal("register"));
+
+  // Acceso rápido con usuario demo
+  if (btnQuickDemo) {
+    btnQuickDemo.addEventListener("click", () => {
+      loginUser(DEMO_USER);
+    });
+  }
+
+  // Enviar formulario de inicio de sesión
+  if (loginForm) {
+    loginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const emailInput = document.getElementById("login-email");
+      const email = emailInput ? emailInput.value.trim() : "cliente@correo.com";
+      const nameGuess = email.split("@")[0].replace(/[._-]/g, " ");
+      const formattedName = nameGuess.charAt(0).toUpperCase() + nameGuess.slice(1);
+
+      loginUser({
+        id: "usr_" + Date.now(),
+        nombre: formattedName,
+        email: email,
+        telefono: "310 123 4567",
+        ciudad: "Bogotá D.C.",
+        direccion: "Calle 100 # 15-20",
+        pedidos: []
+      });
+    });
+  }
+
+  // Enviar formulario de registro
+  if (registerForm) {
+    registerForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = document.getElementById("reg-name").value.trim();
+      const email = document.getElementById("reg-email").value.trim();
+      const phone = document.getElementById("reg-phone").value.trim();
+
+      loginUser({
+        id: "usr_" + Date.now(),
+        nombre: name,
+        email: email,
+        telefono: phone,
+        ciudad: "Bogotá D.C.",
+        direccion: "Dirección principal",
+        pedidos: []
+      });
+    });
+  }
+
+  // Mostrar / Ocultar contraseñas
+  if (toggleLoginPass) {
+    toggleLoginPass.addEventListener("click", () => {
+      const input = document.getElementById("login-password");
+      if (input) {
+        const isPass = input.type === "password";
+        input.type = isPass ? "text" : "password";
+        toggleLoginPass.textContent = isPass ? "🙈" : "👁️";
+      }
+    });
+  }
+
+  if (toggleRegPass) {
+    toggleRegPass.addEventListener("click", () => {
+      const input = document.getElementById("reg-password");
+      if (input) {
+        const isPass = input.type === "password";
+        input.type = isPass ? "text" : "password";
+        toggleRegPass.textContent = isPass ? "🙈" : "👁️";
+      }
+    });
+  }
+
+  // Olvidé mi contraseña simulado
+  if (btnForgotPass) {
+    btnForgotPass.addEventListener("click", () => {
+      showToast("Hemos enviado un enlace de recuperación simulado a tu correo", "info");
+    });
+  }
+
+  // Menú desplegable del usuario
+  const btnDropdownProfile = document.getElementById("btn-dropdown-profile");
+  const btnDropdownOrders = document.getElementById("btn-dropdown-orders");
+  const btnDropdownLogout = document.getElementById("btn-dropdown-logout");
+  const closeProfileBtn = document.getElementById("close-profile-btn");
+  const profileModal = document.getElementById("profile-modal");
+
+  if (btnDropdownProfile) btnDropdownProfile.addEventListener("click", openProfileModal);
+  if (btnDropdownOrders) btnDropdownOrders.addEventListener("click", openProfileModal);
+  if (btnDropdownLogout) btnDropdownLogout.addEventListener("click", logoutUser);
+  if (closeProfileBtn) closeProfileBtn.addEventListener("click", closeProfileModal);
+  if (profileModal) {
+    profileModal.addEventListener("click", (e) => {
+      if (e.target === profileModal) closeProfileModal();
+    });
+  }
+
+  // Cerrar dropdown si se hace clic fuera
+  document.addEventListener("click", (e) => {
+    const userWrapper = document.getElementById("user-menu-wrapper");
+    if (userWrapper && !userWrapper.contains(e.target)) {
+      closeUserDropdown();
+    }
+  });
+
   // Eventos de apertura / cierre del carrito
   const cartToggleBtn = document.getElementById("cart-toggle-btn");
   const closeCartBtn = document.getElementById("close-cart-btn");
@@ -1031,6 +1514,9 @@ function bindEvents() {
       closeCart();
       closeFavorites();
       closeCheckout();
+      closeLoginModal();
+      closeProfileModal();
+      closeUserDropdown();
     }
   });
 }
@@ -1059,5 +1545,12 @@ window.app = {
   closeFavorites,
   openCheckout,
   closeCheckout,
+  openLoginModal,
+  closeLoginModal,
+  openProfileModal,
+  closeProfileModal,
+  loginUser,
+  logoutUser,
   showToast
 };
+

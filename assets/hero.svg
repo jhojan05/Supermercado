@@ -1,27 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 380" width="540" height="380">
   <defs>
     <linearGradient id="bgHero" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#EAF5EC"/>
-      <stop offset="100%" stop-color="#D1EBD7"/>
+      <stop offset="0%" stop-color="#FDECEE"/>
+      <stop offset="100%" stop-color="#F9CFD2"/>
     </linearGradient>
     <linearGradient id="basketGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#D97706"/>
       <stop offset="100%" stop-color="#B45309"/>
     </linearGradient>
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#163D2A" flood-opacity="0.15"/>
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#7A1318" flood-opacity="0.18"/>
     </filter>
   </defs>
   
   <rect x="20" y="20" width="500" height="340" rx="28" fill="url(#bgHero)"/>
   
   <!-- Subtle decorative circles -->
-  <circle cx="100" cy="80" r="60" fill="#2E7D4F" opacity="0.06"/>
-  <circle cx="440" cy="300" r="90" fill="#2E7D4F" opacity="0.08"/>
-  <circle cx="480" cy="70" r="40" fill="#D97706" opacity="0.1"/>
+  <circle cx="100" cy="80" r="60" fill="#C92A34" opacity="0.06"/>
+  <circle cx="440" cy="300" r="90" fill="#C92A34" opacity="0.08"/>
+  <circle cx="480" cy="70" r="40" fill="#D97706" opacity="0.12"/>
 
   <!-- Basket Shadow -->
-  <ellipse cx="270" cy="320" rx="170" ry="24" fill="#163D2A" opacity="0.18" />
+  <ellipse cx="270" cy="320" rx="170" ry="24" fill="#7A1318" opacity="0.18" />
 
   <!-- Fresh vegetables & fruits in basket -->
   <g filter="url(#shadow)">
@@ -37,7 +37,7 @@
     <line x1="288" y1="160" x2="306" y2="170" stroke="#925927" stroke-width="2.5" stroke-linecap="round"/>
 
     <!-- Red Apple -->
-    <circle cx="210" cy="190" r="36" fill="#EF4444"/>
+    <circle cx="210" cy="190" r="36" fill="#DC2626"/>
     <path d="M210 154 C213 145, 218 142, 224 140" stroke="#78350F" stroke-width="3" stroke-linecap="round"/>
     <path d="M222 144 C230 142, 235 146, 236 150 C230 152, 225 150, 222 144 Z" fill="#22C55E"/>
     <ellipse cx="200" cy="180" rx="8" ry="14" fill="#F87171" transform="rotate(-20 200 180)"/>
@@ -69,9 +69,9 @@
   <!-- Floating Badge 100% Fresco -->
   <g transform="translate(60, 240)">
     <rect x="0" y="0" width="135" height="42" rx="21" fill="#FFFFFF" filter="url(#shadow)"/>
-    <circle cx="22" cy="21" r="14" fill="#2E7D4F"/>
+    <circle cx="22" cy="21" r="14" fill="#C92A34"/>
     <text x="22" y="26" font-family="system-ui" font-size="14" text-anchor="middle" fill="#FFFFFF">✓</text>
-    <text x="44" y="25" font-family="system-ui" font-size="13" font-weight="700" fill="#163D2A">100% Fresco</text>
+    <text x="44" y="25" font-family="system-ui" font-size="13" font-weight="700" fill="#7A1318">100% Fresco</text>
   </g>
 
   <!-- Floating Badge Entrega Rapida -->
@@ -79,6 +79,6 @@
     <rect x="0" y="0" width="145" height="42" rx="21" fill="#FFFFFF" filter="url(#shadow)"/>
     <circle cx="22" cy="21" r="14" fill="#D97706"/>
     <text x="22" y="26" font-family="system-ui" font-size="14" text-anchor="middle" fill="#FFFFFF">⚡</text>
-    <text x="44" y="25" font-family="system-ui" font-size="13" font-weight="700" fill="#163D2A">Envíos en 2h</text>
+    <text x="44" y="25" font-family="system-ui" font-size="13" font-weight="700" fill="#7A1318">Envíos en 2h</text>
   </g>
 </svg>
