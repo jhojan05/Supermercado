@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Supermercado Verde - Frutas, verduras frescas, carnes, lácteos y despensa con entrega a domicilio rápida en Colombia. Calidad y ahorro garantizado.">
+  <meta name="keywords" content="supermercado virtual, mercado online, frutas y verduras, alimentos frescos, colombia, compras">
+  <meta name="author" content="Supermercado Verde">
+  <title>Supermercado Verde | Tu mercado fresco directo a tu hogar</title>
+  
+  <!-- Favicon SVG -->
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+  
+  <!-- Hoja de estilos CSS3 -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Enlace accesible de salto al contenido -->
+  <a href="#catalogo" class="skip-link">Saltar al catálogo de productos</a>
+
+  <!-- 1. Barra de Anuncios Superior -->
+  <aside class="top-announcement" aria-label="Información y promociones vigentes">
+    <div class="container announcement-inner">
+      <div class="announcement-item">
+        <span>🚚</span>
+        <span>Envío <strong>GRATIS</strong> en compras superiores a <span class="announcement-highlight">$ 50.000 COP</span></span>
+      </div>
+      <div class="announcement-item">
+        <span>🌱</span>
+        <span>Productos 100% frescos de campesinos colombianos</span>
+      </div>
+      <div class="announcement-item">
+        <span>⚡</span>
+        <span>Entrega estimada: <strong>Mismo día (1 a 2 horas)</strong></span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 2. Encabezado Principal (Header) -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <!-- Logotipo y Nombre -->
+      <a href="#" class="logo-link" aria-label="Inicio - Supermercado Verde">
+        <img src="assets/logo.svg" alt="Supermercado Verde" class="logo-img">
+      </a>
+
+      <!-- Buscador Central -->
+      <div class="header-search" id="header-search">
+        <form class="search-form" id="search-form" role="search" onsubmit="event.preventDefault();">
+          <label for="search-input" class="sr-only">Buscar en el supermercado</label>
+          <button type="submit" class="search-icon-btn" aria-label="Buscar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+          <input 
+            type="search" 
+            id="search-input" 
+            class="search-input" 
+            placeholder="Buscar manzana, leche, café, pechuga..." 
+            autocomplete="off"
+            aria-label="Buscar productos por nombre"
+          >
+          <button type="button" id="clear-search-btn" class="search-clear-btn" aria-label="Limpiar búsqueda" hidden>
+            &times;
+          </button>
+        </form>
+      </div>
+
+      <!-- Navegación de Categorías Rápidas -->
+      <nav class="header-nav" aria-label="Navegación principal">
+        <ul class="nav-links">
+          <li><a href="#hero" class="nav-link active">Inicio</a></li>
+          <li><a href="#categorias" class="nav-link">Categorías</a></li>
+          <li><a href="#catalogo" class="nav-link">Catálogo</a></li>
+          <li><button type="button" id="filter-offers-nav" class="nav-link" style="background:none;border:none;cursor:pointer;">Ofertas 🔥</button></li>
+        </ul>
+      </nav>
+
+      <!-- Botones de Acción (Favoritos y Carrito) -->
+      <div class="header-actions">
+        <!-- Botón Móvil de Búsqueda -->
+        <button type="button" class="mobile-toggle-btn" id="mobile-search-toggle" aria-label="Abrir buscador móvil">
+          🔍
+        </button>
+
+        <!-- Botón Favoritos -->
+        <button type="button" class="action-btn" id="fav-toggle-btn" aria-label="Ver productos favoritos">
+          <span aria-hidden="true">❤️</span>
+          <span class="action-btn-text">Favoritos</span>
+          <span class="badge-count" id="fav-badge-count">0</span>
+        </button>
+
+        <!-- Botón Carrito de Compras -->
+        <button type="button" class="action-btn cart-action-btn" id="cart-toggle-btn" aria-label="Abrir carrito de compras">
+          <span aria-hidden="true">🛒</span>
+          <span class="action-btn-text">Carrito</span>
+          <span class="badge-count" id="cart-badge-count">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenido Principal -->
+  <main id="main-content">
+
+    <!-- 3. Banner Principal (Hero) -->
+    <section class="hero-section" id="hero" aria-label="Promoción principal">
+      <div class="container">
+        <div class="hero-banner">
+          <div class="hero-text-content">
+            <span class="hero-badge-tag">🌿 Cosecha Fresca de Temporada</span>
+            <h1 class="hero-title">Tu mercado campesino, directo a tu <span>hogar</span></h1>
+            <p class="hero-subtitle">
+              Disfruta de frutas y verduras frescas, carnes seleccionadas y los productos de la canasta familiar con la mejor calidad y precios justos en pesos colombianos.
+            </p>
+            <div class="hero-actions">
+              <a href="#catalogo" class="btn btn-primary" id="hero-cta-btn">
+                <span>Explorar catálogo</span>
+                <span aria-hidden="true">→</span>
+              </a>
+              <button type="button" class="btn btn-secondary" id="hero-offers-btn">
+                <span>Ver promociones del día</span>
+                <span aria-hidden="true">🏷️</span>
+              </button>
+            </div>
+          </div>
+          <div class="hero-image-wrapper">
+            <img src="assets/hero.svg" alt="Canasta con alimentos y productos frescos de supermercado" class="hero-img">
+          </div>
+        </div>
+
+        <!-- Tira de Beneficios -->
+        <div class="features-strip">
+          <div class="feature-card">
+            <div class="feature-icon" aria-hidden="true">🌱</div>
+            <div class="feature-info">
+              <h2>100% Frescura Local</h2>
+              <p>Directo de campesinos colombianos</p>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" aria-hidden="true">⚡</div>
+            <div class="feature-info">
+              <h2>Entrega Exprés</h2>
+              <p>Tu pedido en tu puerta en 1 a 2 horas</p>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" aria-hidden="true">💰</div>
+            <div class="feature-info">
+              <h2>Ahorro en Cada Compra</h2>
+              <p>Precios sin intermediarios costosos</p>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" aria-hidden="true">🛡️</div>
+            <div class="feature-info">
+              <h2>Compra Segura</h2>
+              <p>Paga al recibir en efectivo o datáfono</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Sección de Categorías -->
+    <section class="categories-section" id="categorias" aria-labelledby="categories-heading">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <h2 id="categories-heading" class="section-title">Explora por categorías</h2>
+            <p class="section-subtitle">Encuentra todo lo que necesitas para tu despensa y tu hogar</p>
+          </div>
+        </div>
+
+        <!-- Chips de selección rápida -->
+        <div class="categories-grid" id="categories-container" role="tablist" aria-label="Filtro de categorías">
+          <!-- Se inyecta dinámicamente con JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Catálogo Completo de Productos -->
+    <section class="catalog-section" id="catalogo" aria-labelledby="catalog-heading">
+      <div class="container">
+        <!-- Barra de herramientas del catálogo -->
+        <div class="catalog-toolbar">
+          <div class="toolbar-status">
+            <h2 id="catalog-heading" class="sr-only">Listado de productos</h2>
+            <span class="catalog-count" id="catalog-count">Mostrando <strong>0</strong> productos</span>
+            <div id="active-filter-container"></div>
+          </div>
+
+          <div class="toolbar-controls">
+            <!-- Botón filtro solo ofertas -->
+            <button type="button" class="quick-filter-btn" id="filter-offers-btn" aria-pressed="false">
+              🏷️ Solo ofertas
+            </button>
+
+            <!-- Ordenamiento -->
+            <div class="sort-wrapper">
+              <label for="sort-select" class="sort-label">Ordenar por:</label>
+              <select id="sort-select" class="sort-select" aria-label="Ordenar productos">
+                <option value="featured">Destacados</option>
+                <option value="price-asc">Precio: menor a mayor</option>
+                <option value="price-desc">Precio: mayor a menor</option>
+                <option value="name-asc">Nombre: A - Z</option>
+                <option value="name-desc">Nombre: Z - A</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grid de Tarjetas de Producto -->
+        <div class="products-grid" id="products-grid" aria-live="polite">
+          <!-- Se renderiza dinámicamente con renderProducts() -->
+        </div>
+
+        <!-- Estado Vacío (cuando no hay coincidencias) -->
+        <div class="empty-state" id="empty-state" style="display: none;" role="status">
+          <span class="empty-state-icon" aria-hidden="true">🔍</span>
+          <h3 class="empty-state-title">No encontramos productos coincidentes</h3>
+          <p class="empty-state-text">Intenta con otro término de búsqueda o selecciona otra categoría de nuestro catálogo.</p>
+          <button type="button" class="btn btn-primary" id="reset-filters-btn">
+            Ver todos los productos
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================================================
+       6. CARRITO LATERAL (DRAWER / OFF-CANVAS) - Sección 6.6
+       ========================================================================== -->
+  <div class="cart-backdrop" id="cart-backdrop" aria-hidden="true"></div>
+  
+  <aside class="cart-drawer" id="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="cart-drawer-title" aria-hidden="true">
+    <div class="drawer-header">
+      <div class="drawer-title-group">
+        <span aria-hidden="true">🛒</span>
+        <h2 id="cart-drawer-title" class="drawer-title">Tu Carrito</h2>
+        <span class="badge-count" id="drawer-item-count">0</span>
+      </div>
+      <button type="button" class="drawer-close-btn" id="close-cart-btn" aria-label="Cerrar carrito">
+        &times;
+      </button>
+    </div>
+
+    <!-- Barra de progreso para envío gratis -->
+    <div class="shipping-progress-box">
+      <div class="shipping-progress-text">
+        <span id="shipping-progress-label">Agrega productos para envío gratis</span>
+        <span id="shipping-progress-amount">$ 50.000</span>
+      </div>
+      <div class="shipping-bar-track">
+        <div class="shipping-bar-fill" id="shipping-bar-fill" style="width: 0%;"></div>
+      </div>
+    </div>
+
+    <!-- Lista de artículos en el carrito -->
+    <div class="cart-items-list" id="cart-items-list" tabindex="0" aria-label="Artículos en tu carrito">
+      <!-- Inyectado por renderCart() -->
+    </div>
+
+    <!-- Resumen y Acciones del Carrito -->
+    <div class="cart-footer" id="cart-footer">
+      <div class="cart-summary-row">
+        <span>Subtotal</span>
+        <span id="cart-subtotal">$ 0</span>
+      </div>
+      <div class="cart-summary-row" id="cart-discount-row" style="display: none;">
+        <span>Descuento aplicado</span>
+        <span id="cart-discount" style="color: var(--color-success); font-weight: bold;">-$ 0</span>
+      </div>
+      <div class="cart-summary-row">
+        <span>Costo de envío estimado</span>
+        <span id="cart-shipping">$ 0</span>
+      </div>
+      <div class="cart-summary-row total-row">
+        <span>Total estimado</span>
+        <span id="cart-total">$ 0</span>
+      </div>
+      <button type="button" class="cart-checkout-btn" id="checkout-open-btn">
+        <span>Simular Pedido</span>
+        <span aria-hidden="true">💳</span>
+      </button>
+      <button type="button" class="cart-clear-btn" id="clear-cart-btn">
+        Vaciar carrito
+      </button>
+    </div>
+  </aside>
+
+  <!-- ==========================================================================
+       7. MODAL DE FAVORITOS
+       ========================================================================== -->
+  <div class="modal-backdrop" id="favorites-modal" role="dialog" aria-modal="true" aria-labelledby="fav-modal-title" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="fav-modal-title" class="modal-title">Tus Productos Favoritos ❤️</h2>
+        <button type="button" class="drawer-close-btn" id="close-fav-btn" aria-label="Cerrar favoritos">
+          &times;
+        </button>
+      </div>
+      <div class="modal-body" id="favorites-body">
+        <!-- Renderizado dinámicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       8. MODAL DE COMPRA SIMULADA (CHECKOUT PROTOTIPO)
+       ========================================================================== -->
+  <div class="modal-backdrop" id="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-modal-title" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="checkout-modal-title" class="modal-title">Simulación de Pedido 🛒</h2>
+        <button type="button" class="drawer-close-btn" id="close-checkout-btn" aria-label="Cerrar pedido">
+          &times;
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="checkout-form-container">
+          <p style="font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 16px;">
+            Este es un prototipo funcional. No se realizarán cobros reales ni se enviarán datos bancarios.
+          </p>
+          <form id="checkout-form">
+            <div class="form-group">
+              <label for="checkout-name" class="form-label">Nombre completo *</label>
+              <input type="text" id="checkout-name" class="form-input" placeholder="Ej. Carlos Restrepo" required>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="checkout-phone" class="form-label">Teléfono celular *</label>
+                <input type="tel" id="checkout-phone" class="form-input" placeholder="Ej. 312 456 7890" required>
+              </div>
+              <div class="form-group">
+                <label for="checkout-city" class="form-label">Ciudad / Municipio *</label>
+                <select id="checkout-city" class="form-select" required>
+                  <option value="Bogotá D.C.">Bogotá D.C.</option>
+                  <option value="Medellín">Medellín</option>
+                  <option value="Cali">Cali</option>
+                  <option value="Barranquilla">Barranquilla</option>
+                  <option value="Bucaramanga">Bucaramanga</option>
+                  <option value="Tunja">Tunja</option>
+                  <option value="Otra">Otra ciudad</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="checkout-address" class="form-label">Dirección de entrega *</label>
+              <input type="text" id="checkout-address" class="form-input" placeholder="Ej. Carrera 15 # 85-32 Apto 402" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Método de pago simulado *</label>
+              <div class="payment-options-grid">
+                <label class="payment-option-label">
+                  <input type="radio" name="paymentMethod" value="Contraentrega en Efectivo" checked>
+                  <span>💵 Efectivo contraentrega</span>
+                </label>
+                <label class="payment-option-label">
+                  <input type="radio" name="paymentMethod" value="Datáfono contraentrega">
+                  <span>💳 Datáfono contraentrega</span>
+                </label>
+                <label class="payment-option-label">
+                  <input type="radio" name="paymentMethod" value="Transferencia Nequi / Daviplata">
+                  <span>📱 Nequi / Daviplata</span>
+                </label>
+                <label class="payment-option-label">
+                  <input type="radio" name="paymentMethod" value="Tarjeta Débito/Crédito Simulada">
+                  <span>🏦 Tarjeta Simulada</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="checkout-notes" class="form-label">Instrucciones para el domiciliario (opcional)</label>
+              <textarea id="checkout-notes" class="form-textarea" rows="2" placeholder="Ej. Timbrar en portería, dejar con el vigilante..."></textarea>
+            </div>
+
+            <div style="background-color: var(--color-bg-warm); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 18px;">
+              <div style="display: flex; justify-content: space-between; font-weight: bold; color: var(--color-primary-dark);">
+                <span>Total a confirmar:</span>
+                <span id="checkout-modal-total">$ 0</span>
+              </div>
+            </div>
+
+            <button type="submit" class="cart-checkout-btn" style="width: 100%;">
+              <span>Confirmar Pedido Simulado</span>
+              <span aria-hidden="true">✓</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Pantalla de Éxito -->
+        <div id="checkout-success-container" class="order-success-box" style="display: none;">
+          <div class="success-icon-wrap">✓</div>
+          <h3 class="modal-title" style="margin-bottom: 8px;">¡Pedido Simulado Exitoso!</h3>
+          <p style="color: var(--color-text-muted); font-size: 0.92rem;">
+            Hemos registrado tu orden de demostración con éxito.
+          </p>
+          <div class="order-code-badge" id="order-code-display">
+            ORDEN #SV-2026-7842
+          </div>
+          <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 20px;" id="order-summary-details">
+            Entrega estimada en 90 minutos en tu dirección.
+          </p>
+          <button type="button" class="btn btn-primary" id="success-done-btn" style="width: 100%;">
+            Seguir explorando el supermercado
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       9. CONTENEDOR DE MENSAJES TOAST (FEEDBACK)
+       ========================================================================== -->
+  <div class="toast-container" id="toast-container" aria-live="assertive"></div>
+
+  <!-- ==========================================================================
+       10. PIE DE PÁGINA (FOOTER) - Sección 5.1
+       ========================================================================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <img src="assets/logo.svg" alt="Supermercado Verde" style="height: 44px; filter: brightness(0) invert(1);">
+          <p>
+            Tu supermercado virtual de confianza en Colombia. Productos frescos, precios justos y una experiencia de compra diseñada para simplificar tu vida.
+          </p>
+        </div>
+
+        <div>
+          <h3 class="footer-heading">Categorías</h3>
+          <ul class="footer-links">
+            <li><a href="#catalogo" class="footer-link" onclick="app.setCategory('Frutas y verduras')">Frutas y verduras</a></li>
+            <li><a href="#catalogo" class="footer-link" onclick="app.setCategory('Carnes y huevos')">Carnes y huevos</a></li>
+            <li><a href="#catalogo" class="footer-link" onclick="app.setCategory('Lácteos')">Lácteos</a></li>
+            <li><a href="#catalogo" class="footer-link" onclick="app.setCategory('Panadería')">Panadería</a></li>
+            <li><a href="#catalogo" class="footer-link" onclick="app.setCategory('Despensa')">Despensa</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="footer-heading">Servicio al Cliente</h3>
+          <ul class="footer-links">
+            <li><a href="#" class="footer-link">Preguntas frecuentes</a></li>
+            <li><a href="#" class="footer-link">Términos de servicio</a></li>
+            <li><a href="#" class="footer-link">Políticas de privacidad</a></li>
+            <li><a href="#" class="footer-link">Garantía de frescura</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="footer-heading">Horarios y Cobertura</h3>
+          <div class="footer-contact-info">
+            <p><strong>Lunes a Domingo:</strong> 7:00 a.m. a 9:00 p.m.</p>
+            <p><strong>Línea de atención:</strong> (601) 789 0000</p>
+            <p><strong>WhatsApp:</strong> +57 310 000 0000</p>
+            <p><strong>Cobertura:</strong> Principales ciudades de Colombia</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 Supermercado Verde. Todos los derechos reservados. Prototipo funcional frontend desarrollado con HTML5, CSS3 y JavaScript ES6+.</p>
+        <p>Inspirado en referentes de comercio electrónico y usabilidad Baymard Institute.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts JavaScript (Carga en orden según sección 7.2 y 7.3) -->
+  <script src="js/products.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

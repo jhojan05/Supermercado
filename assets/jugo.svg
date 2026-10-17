@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="24" fill="#FFEDD5"/>
+  <ellipse cx="100" cy="170" rx="50" ry="10" fill="#E2E8F0"/>
+  <g transform="translate(10, 5)">
+    <!-- Juice Bottle -->
+    <rect x="74" y="32" width="22" height="12" rx="4" fill="#EA580C"/>
+    <path d="M78 44 L92 44 L95 65 L112 80 L112 155 C112 162 105 165 85 165 C65 165 58 162 58 155 L58 80 L75 65 Z" fill="#FB923C"/>
+    <!-- Juice level highlight -->
+    <path d="M64 85 L106 85 L106 150 C106 156 100 158 85 158 C70 158 64 156 64 150 Z" fill="#F97316"/>
+    <!-- Slice of orange on label -->
+    <circle cx="85" cy="115" r="14" fill="#FFFFFF"/>
+    <circle cx="85" cy="115" r="11" fill="#EA580C"/>
+    <circle cx="85" cy="115" r="3" fill="#FFFFFF"/>
+    <text x="85" y="142" font-family="sans-serif" font-size="8" font-weight="bold" text-anchor="middle" fill="#FFFFFF">100% NARANJA</text>
+  </g>
+</svg>

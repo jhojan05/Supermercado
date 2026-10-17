@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 380" width="540" height="380">
+  <defs>
+    <linearGradient id="bgHero" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EAF5EC"/>
+      <stop offset="100%" stop-color="#D1EBD7"/>
+    </linearGradient>
+    <linearGradient id="basketGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#B45309"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#163D2A" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  
+  <rect x="20" y="20" width="500" height="340" rx="28" fill="url(#bgHero)"/>
+  
+  <!-- Subtle decorative circles -->
+  <circle cx="100" cy="80" r="60" fill="#2E7D4F" opacity="0.06"/>
+  <circle cx="440" cy="300" r="90" fill="#2E7D4F" opacity="0.08"/>
+  <circle cx="480" cy="70" r="40" fill="#D97706" opacity="0.1"/>
+
+  <!-- Basket Shadow -->
+  <ellipse cx="270" cy="320" rx="170" ry="24" fill="#163D2A" opacity="0.18" />
+
+  <!-- Fresh vegetables & fruits in basket -->
+  <g filter="url(#shadow)">
+    <!-- Celery / greens in back -->
+    <path d="M180 180 C170 120, 200 90, 220 70 C230 110, 220 160, 210 190 Z" fill="#4ADE80"/>
+    <path d="M210 180 C210 110, 240 80, 270 60 C270 110, 250 150, 240 180 Z" fill="#22C55E"/>
+    <path d="M250 180 C270 110, 310 85, 340 75 C320 120, 290 160, 280 190 Z" fill="#16A34A"/>
+
+    <!-- Baguette -->
+    <rect x="300" y="80" width="36" height="150" rx="18" transform="rotate(25 300 80)" fill="#E0A96D" stroke="#C68A4C" stroke-width="2"/>
+    <line x1="312" y1="110" x2="330" y2="120" stroke="#925927" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="300" y1="135" x2="318" y2="145" stroke="#925927" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="288" y1="160" x2="306" y2="170" stroke="#925927" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- Red Apple -->
+    <circle cx="210" cy="190" r="36" fill="#EF4444"/>
+    <path d="M210 154 C213 145, 218 142, 224 140" stroke="#78350F" stroke-width="3" stroke-linecap="round"/>
+    <path d="M222 144 C230 142, 235 146, 236 150 C230 152, 225 150, 222 144 Z" fill="#22C55E"/>
+    <ellipse cx="200" cy="180" rx="8" ry="14" fill="#F87171" transform="rotate(-20 200 180)"/>
+
+    <!-- Orange / Citrus -->
+    <circle cx="270" cy="195" r="32" fill="#F97316"/>
+    <circle cx="270" cy="195" r="32" fill="#EA580C" opacity="0.3"/>
+    <circle cx="265" cy="170" r="2" fill="#78350F"/>
+
+    <!-- Carrot -->
+    <path d="M330 170 L380 250 L345 255 Z" fill="#FB923C"/>
+    <path d="M335 170 C330 150, 320 145, 315 140" stroke="#16A34A" stroke-width="3"/>
+    <path d="M335 170 C340 150, 345 145, 350 142" stroke="#22C55E" stroke-width="3"/>
+
+    <!-- Avocado -->
+    <ellipse cx="160" cy="220" rx="30" ry="38" transform="rotate(-15 160 220)" fill="#365314"/>
+    <ellipse cx="160" cy="220" rx="24" ry="32" transform="rotate(-15 160 220)" fill="#84CC16"/>
+    <circle cx="160" cy="225" r="14" fill="#713F12"/>
+
+    <!-- Basket Body -->
+    <path d="M140 210 L160 300 C165 315, 375 315, 380 300 L400 210 Z" fill="url(#basketGrad)"/>
+    <!-- Basket Weave Pattern -->
+    <path d="M150 235 Q270 245 390 235 M155 260 Q270 270 385 260 M160 285 Q270 295 380 285" stroke="#78350F" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.4"/>
+    <path d="M190 215 L210 305 M240 215 L250 310 M290 215 L290 310 M340 215 L330 305" stroke="#78350F" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.4"/>
+    <!-- Basket Rim -->
+    <rect x="130" y="202" width="280" height="16" rx="8" fill="#F59E0B" stroke="#B45309" stroke-width="2"/>
+  </g>
+
+  <!-- Floating Badge 100% Fresco -->
+  <g transform="translate(60, 240)">
+    <rect x="0" y="0" width="135" height="42" rx="21" fill="#FFFFFF" filter="url(#shadow)"/>
+    <circle cx="22" cy="21" r="14" fill="#2E7D4F"/>
+    <text x="22" y="26" font-family="system-ui" font-size="14" text-anchor="middle" fill="#FFFFFF">✓</text>
+    <text x="44" y="25" font-family="system-ui" font-size="13" font-weight="700" fill="#163D2A">100% Fresco</text>
+  </g>
+
+  <!-- Floating Badge Entrega Rapida -->
+  <g transform="translate(350, 110)">
+    <rect x="0" y="0" width="145" height="42" rx="21" fill="#FFFFFF" filter="url(#shadow)"/>
+    <circle cx="22" cy="21" r="14" fill="#D97706"/>
+    <text x="22" y="26" font-family="system-ui" font-size="14" text-anchor="middle" fill="#FFFFFF">⚡</text>
+    <text x="44" y="25" font-family="system-ui" font-size="13" font-weight="700" fill="#163D2A">Envíos en 2h</text>
+  </g>
+</svg>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="24" fill="#FEE2E2"/>
+  <ellipse cx="100" cy="170" rx="55" ry="12" fill="#E2E8F0" opacity="0.8"/>
+  <g transform="translate(0, 10)">
+    <!-- Stem and leaves -->
+    <path d="M100 45 L100 35" stroke="#15803D" stroke-width="4" stroke-linecap="round"/>
+    <path d="M100 45 L85 38 M100 45 L115 38 M100 45 L90 52 M100 45 L110 52" stroke="#16A34A" stroke-width="4" stroke-linecap="round"/>
+    <!-- Tomato body -->
+    <circle cx="100" cy="100" r="52" fill="#EF4444"/>
+    <path d="M75 75 C65 85 65 105 70 120" stroke="#F87171" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.6"/>
+  </g>
+</svg>

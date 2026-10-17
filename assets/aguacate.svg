@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="24" fill="#ECFCCB"/>
+  <ellipse cx="100" cy="170" rx="55" ry="12" fill="#E2E8F0" opacity="0.8"/>
+  <!-- Avocado Half -->
+  <g transform="translate(15, 0)">
+    <!-- Outer skin -->
+    <path d="M85 35 C60 55 45 95 45 125 C45 155 65 170 85 170 C105 170 125 155 125 125 C125 95 110 55 85 35 Z" fill="#365314"/>
+    <!-- Pulp -->
+    <path d="M85 42 C64 60 52 96 52 123 C52 150 68 163 85 163 C102 163 118 150 118 123 C118 96 106 60 85 42 Z" fill="#A3E635"/>
+    <path d="M85 48 C70 65 60 98 60 122 C60 144 72 156 85 156 C98 156 110 144 110 122 C110 98 100 65 85 48 Z" fill="#BEF264"/>
+    <!-- Seed -->
+    <circle cx="85" cy="125" r="24" fill="#713F12"/>
+    <ellipse cx="80" cy="118" rx="8" ry="12" fill="#A16207" opacity="0.7"/>
+    <ellipse cx="78" cy="114" rx="3" ry="5" fill="#FEF08A" opacity="0.6"/>
+  </g>
+</svg>

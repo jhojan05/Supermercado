@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="24" fill="#FEF3C7"/>
+  <ellipse cx="100" cy="170" rx="65" ry="12" fill="#E2E8F0" opacity="0.8"/>
+  <g transform="translate(10, 10)">
+    <!-- Croissant Crescent -->
+    <path d="M40 135 C35 110 50 75 90 70 C130 75 145 110 140 135 C130 120 115 105 90 105 C65 105 50 120 40 135 Z" fill="#D97706"/>
+    <path d="M55 125 C50 105 65 80 90 78 C115 80 130 105 125 125 C115 115 105 110 90 110 C75 110 65 115 55 125 Z" fill="#F59E0B"/>
+    <!-- Center roll -->
+    <ellipse cx="90" cy="95" rx="20" ry="14" fill="#FBBF24"/>
+    <line x1="75" y1="95" x2="105" y2="95" stroke="#B45309" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+</svg>

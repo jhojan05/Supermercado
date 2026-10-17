@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="24" fill="#FEF3C7"/>
+  <ellipse cx="100" cy="170" rx="60" ry="12" fill="#E2E8F0" opacity="0.8"/>
+  <g transform="translate(10, 15)">
+    <!-- Chicken Breast Fillet -->
+    <path d="M60 130 C40 105 45 65 85 55 C125 45 150 75 140 115 C130 145 90 150 60 130 Z" fill="#FDE68A" stroke="#F59E0B" stroke-width="2"/>
+    <path d="M70 120 C55 100 60 75 90 65 C120 55 135 80 130 110 C120 130 90 135 70 120 Z" fill="#FEF08A"/>
+    <!-- Texture lines -->
+    <path d="M80 75 Q95 85 110 75 M75 95 Q95 105 115 95 M75 115 Q95 120 110 115" stroke="#FBBF24" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <!-- Herb garnish -->
+    <circle cx="95" cy="88" r="3" fill="#15803D"/>
+    <circle cx="108" cy="105" r="2.5" fill="#15803D"/>
+  </g>
+</svg>

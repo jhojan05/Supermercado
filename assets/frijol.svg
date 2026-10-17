@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="24" fill="#FEE2E2"/>
+  <ellipse cx="100" cy="170" rx="55" ry="12" fill="#E2E8F0" opacity="0.8"/>
+  <g transform="translate(10, 5)">
+    <!-- Bean Pouch Transparent window -->
+    <path d="M55 50 L125 50 L130 155 C130 162 120 165 90 165 C60 165 50 162 50 155 Z" fill="#7F1D1D"/>
+    <!-- Window with beans -->
+    <circle cx="90" cy="105" r="30" fill="#991B1B"/>
+    <!-- Beans -->
+    <ellipse cx="80" cy="100" rx="7" ry="10" fill="#DC2626" transform="rotate(30 80 100)"/>
+    <ellipse cx="98" cy="98" rx="7" ry="10" fill="#B91C1C" transform="rotate(-20 98 98)"/>
+    <ellipse cx="90" cy="115" rx="7" ry="10" fill="#EF4444" transform="rotate(10 90 115)"/>
+    <rect x="58" y="140" width="64" height="15" rx="4" fill="#FEF2F2"/>
+    <text x="90" y="151" font-family="sans-serif" font-size="8" font-weight="bold" text-anchor="middle" fill="#991B1B">BOLA ROJA</text>
+  </g>
+</svg>

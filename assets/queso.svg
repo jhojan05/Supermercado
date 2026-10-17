@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="24" fill="#FEF9C3"/>
+  <ellipse cx="100" cy="170" rx="60" ry="12" fill="#E2E8F0" opacity="0.8"/>
+  <g transform="translate(15, 20)">
+    <!-- Cheese Wedge -->
+    <path d="M35 120 L135 120 L135 85 L35 105 Z" fill="#F59E0B"/>
+    <path d="M35 105 L135 85 L95 45 L35 105 Z" fill="#FBBF24"/>
+    <path d="M135 85 L135 120 L95 80 L95 45 Z" fill="#D97706"/>
+    <!-- Holes -->
+    <ellipse cx="70" cy="85" rx="7" ry="5" fill="#D97706" opacity="0.6"/>
+    <ellipse cx="110" cy="70" rx="6" ry="4" fill="#D97706" opacity="0.6"/>
+    <ellipse cx="65" cy="112" rx="5" ry="4" fill="#B45309" opacity="0.6"/>
+    <ellipse cx="105" cy="105" rx="8" ry="6" fill="#B45309" opacity="0.6"/>
+  </g>
+</svg>

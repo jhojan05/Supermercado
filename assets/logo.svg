@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 60" width="240" height="60">
+  <defs>
+    <linearGradient id="gradLogo" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2E7D4F"/>
+      <stop offset="100%" stop-color="#163D2A"/>
+    </linearGradient>
+  </defs>
+  <!-- Icon -->
+  <g transform="translate(10, 6)">
+    <rect x="0" y="4" width="40" height="40" rx="10" fill="url(#gradLogo)" />
+    <!-- Leaf / Basket -->
+    <path d="M20 12 C28 12, 32 18, 30 26 C28 34, 18 36, 12 34 C12 26, 14 12, 20 12 Z" fill="#EAF5EC" />
+    <path d="M20 12 Q24 22 13 33" stroke="#2E7D4F" stroke-width="2" stroke-linecap="round" fill="none" />
+    <circle cx="28" cy="16" r="3" fill="#D97706" />
+  </g>
+  <!-- Text -->
+  <text x="60" y="29" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="800" fill="#163D2A" letter-spacing="-0.5">Supermercado</text>
+  <text x="60" y="47" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#2E7D4F" letter-spacing="1">VERDE</text>
+  <circle cx="127" cy="42" r="3" fill="#D97706" />
+</svg>

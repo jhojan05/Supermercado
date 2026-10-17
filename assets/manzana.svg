@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="24" fill="#FEE2E2"/>
+  <ellipse cx="100" cy="170" rx="55" ry="12" fill="#E2E8F0" opacity="0.8"/>
+  <g transform="translate(0, 5)">
+    <!-- Stem and Leaf -->
+    <path d="M100 48 C98 34 108 26 112 22" stroke="#78350F" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <path d="M108 30 C122 24 135 32 136 38 C124 44 112 36 108 30 Z" fill="#22C55E"/>
+    <!-- Apple body -->
+    <path d="M100 60 C80 50 48 60 48 95 C48 135 80 158 97 160 C99 160 101 160 103 160 C120 158 152 135 152 95 C152 60 120 50 100 60 Z" fill="#DC2626"/>
+    <!-- Highlight -->
+    <path d="M68 80 C60 92 60 110 65 120" stroke="#F87171" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.6"/>
+  </g>
+</svg>

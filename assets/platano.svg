@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="24" fill="#FEF9C3"/>
+  <ellipse cx="100" cy="170" rx="60" ry="12" fill="#E2E8F0" opacity="0.8"/>
+  <g transform="translate(10, 10)">
+    <!-- Banana 1 -->
+    <path d="M50 50 C45 95 70 145 135 145 C150 145 130 130 80 120 C55 105 55 60 50 50 Z" fill="#FACC15" stroke="#CA8A04" stroke-width="2"/>
+    <!-- Banana main -->
+    <path d="M60 40 C50 90 75 145 145 140 C125 138 75 120 70 85 C68 55 65 42 60 40 Z" fill="#FDE047"/>
+    <path d="M60 40 L65 30 L55 32 Z" fill="#65A30D"/>
+    <path d="M145 140 L152 144 L146 137 Z" fill="#713F12"/>
+    <!-- Speckles -->
+    <circle cx="85" cy="100" r="2" fill="#854D0E"/>
+    <circle cx="105" cy="120" r="2.5" fill="#854D0E"/>
+    <circle cx="120" cy="130" r="1.8" fill="#854D0E"/>
+  </g>
+</svg>

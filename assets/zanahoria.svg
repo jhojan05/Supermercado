@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="24" fill="#FFEDD5"/>
+  <ellipse cx="100" cy="170" rx="55" ry="12" fill="#E2E8F0" opacity="0.8"/>
+  <g transform="translate(0, 5)">
+    <!-- Leaves -->
+    <path d="M100 50 C90 25 75 20 70 15 C85 28 95 38 100 50 Z" fill="#22C55E"/>
+    <path d="M100 50 C100 20 105 15 105 10 C105 25 102 38 100 50 Z" fill="#16A34A"/>
+    <path d="M100 50 C110 25 125 20 130 15 C115 28 105 38 100 50 Z" fill="#22C55E"/>
+    <!-- Carrot Body -->
+    <path d="M80 55 C120 55 125 60 105 160 C102 165 98 165 95 160 C75 60 80 55 80 55 Z" fill="#F97316"/>
+    <!-- Ridges -->
+    <path d="M88 75 Q100 78 112 75 M90 100 Q100 103 108 100 M93 125 Q100 127 105 125" stroke="#C2410C" stroke-width="3" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>
