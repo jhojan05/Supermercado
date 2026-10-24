@@ -1,0 +1,36 @@
+# Robots.txt - Supermercado La Casona (Colombia)
+# SEO, GEO & AEO search engine & generative AI crawler configuration
+
+User-agent: *
+Allow: /
+Allow: /assets/
+Allow: /css/
+Allow: /js/
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /manifest.json
+
+# Permisos explícitos para motores de IA generativa (GEO - Generative Engine Optimization)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Mapa del sitio oficial
+Sitemap: https://supermercadolacasona.com.co/sitemap.xml

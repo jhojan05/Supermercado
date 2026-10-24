@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suite de Pruebas Automatizadas | Supermercado La Casona</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0F172A;
+      --card-bg: #1E293B;
+      --card-border: #334155;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --primary: #7A1318;
+      --primary-light: #B91C1C;
+      --accent: #10B981;
+      --accent-bg: rgba(16, 185, 129, 0.12);
+      --danger: #EF4444;
+      --danger-bg: rgba(239, 68, 68, 0.12);
+      --warning: #F59E0B;
+      --code-bg: #0B1120;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 24px;
+    }
+
+    .title-wrap h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .title-wrap p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+
+    .badge-env {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(185, 28, 28, 0.2);
+      border: 1px solid var(--primary-light);
+      color: #FCA5A5;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .actions-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #B91C1C 0%, #7A1318 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(185, 28, 28, 0.35);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+    }
+    .btn-secondary:hover {
+      background: #334155;
+    }
+
+    /* Métricas resumen */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .metric-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .metric-card.passed .metric-value { color: var(--accent); }
+    .metric-card.failed .metric-value { color: var(--danger); }
+    .metric-card.total .metric-value { color: #38BDF8; }
+    .metric-card.time .metric-value { color: #F59E0B; }
+
+    /* Barra de progreso */
+    .progress-wrap {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .progress-bar-bg {
+      height: 10px;
+      background: #334155;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10B981, #059669);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-bar-fill.has-errors {
+      background: linear-gradient(90deg, #EF4444, #DC2626);
+    }
+
+    /* Filtros */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .filter-btn.active {
+      background: #334155;
+      color: #fff;
+      border-color: #64748B;
+    }
+
+    /* Lista de Suites y Tests */
+    .suite-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .suite-header {
+      padding: 14px 20px;
+      background: rgba(30, 41, 59, 0.7);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .suite-counts {
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      gap: 10px;
+    }
+
+    .test-list {
+      list-style: none;
+    }
+
+    .test-item {
+      padding: 12px 20px;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: background 0.15s ease;
+    }
+    .test-item:last-child { border-bottom: none; }
+    .test-item:hover { background: rgba(51, 65, 85, 0.2); }
+
+    .test-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .test-status-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .test-status-icon.passed {
+      background: var(--accent-bg);
+      color: var(--accent);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .test-status-icon.failed {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .test-name {
+      font-size: 0.92rem;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .test-error {
+      margin-left: 34px;
+      padding: 8px 12px;
+      background: var(--code-bg);
+      border-left: 3px solid var(--danger);
+      border-radius: 4px;
+      color: #FCA5A5;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      white-space: pre-wrap;
+    }
+
+    /* Fixtures ocultos para validaciones DOM */
+    #test-fixture {
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="title-wrap">
+        <span class="badge-env">🛡️ CI / Frontend Test Runner</span>
+        <h1>Supermercado La Casona — Suite de Pruebas</h1>
+        <p>Pruebas de Seguridad Defensiva, Integridad de Catálogo, Carrito, Búsqueda, A11y y DOM.</p>
+      </div>
+      <div class="actions-bar">
+        <button id="run-again-btn" class="btn btn-primary">
+          <span>▶️ Ejecutar Pruebas</span>
+        </button>
+        <a href="../index.html" class="btn btn-secondary">
+          <span>🏪 Ir a la Tienda</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Resumen de Métricas -->
+    <section class="metrics-grid">
+      <div class="metric-card total">
+        <span class="metric-label">Total Pruebas</span>
+        <span class="metric-value" id="metric-total">0</span>
+      </div>
+      <div class="metric-card passed">
+        <span class="metric-label">Exitosas</span>
+        <span class="metric-value" id="metric-passed">0</span>
+      </div>
+      <div class="metric-card failed">
+        <span class="metric-label">Fallidas</span>
+        <span class="metric-value" id="metric-failed">0</span>
+      </div>
+      <div class="metric-card time">
+        <span class="metric-label">Tiempo</span>
+        <span class="metric-value" id="metric-time">0 ms</span>
+      </div>
+    </section>
+
+    <!-- Barra de progreso -->
+    <section class="progress-wrap">
+      <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-muted); font-weight:600;">
+        <span id="progress-status">Preparado para ejecutar...</span>
+        <span id="progress-percent">0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+    </section>
+
+    <!-- Barra de filtros -->
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all">Todas</button>
+      <button class="filter-btn" data-filter="passed">Solo Exitosas</button>
+      <button class="filter-btn" data-filter="failed">Solo Fallidas</button>
+    </div>
+
+    <!-- Contenedor dinámico de resultados -->
+    <main id="suites-container"></main>
+  </div>
+
+  <!-- DOM Fixtures para asegurar que las pruebas DOM y componentes se ejecuten exactamente igual que en index.html -->
+  <div id="test-fixture" aria-hidden="true">
+    <h1>Supermercado La Casona | Mercado Campesino Online, Frutas, Carnes y Despensa en Colombia</h1>
+    
+    <button id="cart-toggle-btn" aria-label="Abrir carrito de compras">🛒</button>
+    <div id="products-grid"></div>
+    <div id="categories-container"></div>
+    <input type="text" id="search-input">
+    <button id="clear-search-btn"></button>
+    <button id="filter-offers-btn"></button>
+
+    <div id="cart-drawer">
+      <div id="cart-items-list"></div>
+      <span id="cart-subtotal">$ 0</span>
+      <span id="cart-total">$ 0</span>
+      <button id="checkout-open-btn">Pagar</button>
+      <button id="clear-cart-btn">Vaciar</button>
+      <span id="drawer-item-count">0</span>
+    </div>
+
+    <!-- Formulario de Checkout con Honeypot -->
+    <form id="checkout-form" novalidate>
+      <input type="text" id="website_hp_co" name="website_hp">
+      <input type="text" id="checkout-name" value="Carlos Restrepo">
+      <input type="tel" id="checkout-phone" value="312 456 7890">
+      <input type="radio" name="paymentMethod" value="Efectivo en caja" checked>
+      <textarea id="checkout-notes"></textarea>
+      <button type="submit">Enviar</button>
+    </form>
+    <div id="checkout-form-container"></div>
+    <div id="checkout-success-container"></div>
+    <span id="order-code-display"></span>
+    <span id="order-summary-details"></span>
+
+    <!-- Formularios Auth con Honeypots -->
+    <form id="login-form">
+      <input type="text" id="website_hp_lf" name="website_hp">
+      <input type="email" id="login-email" value="cliente@casona.com.co">
+      <input type="password" id="login-password">
+    </form>
+    <form id="register-form">
+      <input type="text" id="website_hp_rf" name="website_hp">
+      <input type="text" id="reg-name" value="Mariana Ospina">
+      <input type="email" id="reg-email" value="mariana@correo.com">
+      <input type="tel" id="reg-phone" value="315 123 4567">
+      <input type="password" id="reg-password">
+    </form>
+
+    <!-- Secciones AEO y GEO -->
+    <section id="como-comprar">
+      <div class="step-card">Paso 1</div>
+      <div class="step-card">Paso 2</div>
+      <div class="step-card">Paso 3</div>
+      <div class="step-card">Paso 4</div>
+    </section>
+
+    <section id="faq">
+      <details class="faq-item"><summary>Pregunta 1</summary><p>Respuesta</p></details>
+      <details class="faq-item"><summary>Pregunta 2</summary><p>Respuesta</p></details>
+      <details class="faq-item"><summary>Pregunta 3</summary><p>Respuesta</p></details>
+      <details class="faq-item"><summary>Pregunta 4</summary><p>Respuesta</p></details>
+    </section>
+
+    <section id="compromiso-campo">
+      <div>Boyacá, Antioquia, Cundinamarca</div>
+    </section>
+  </div>
+
+  <!-- Scripts del Supermercado -->
+  <script src="../js/security.js"></script>
+  <script src="../js/products.js"></script>
+  <script src="../js/app.js"></script>
+
+  <!-- Suite de Pruebas -->
+  <script src="tests.js"></script>
+
+  <!-- Script UI del Runner -->
+  <script>
+    (function () {
+      const suitesContainer = document.getElementById('suites-container');
+      const metricTotal = document.getElementById('metric-total');
+      const metricPassed = document.getElementById('metric-passed');
+      const metricFailed = document.getElementById('metric-failed');
+      const metricTime = document.getElementById('metric-time');
+      const progressFill = document.getElementById('progress-fill');
+      const progressStatus = document.getElementById('progress-status');
+      const progressPercent = document.getElementById('progress-percent');
+      const runAgainBtn = document.getElementById('run-again-btn');
+      const filterBtns = document.querySelectorAll('.filter-btn');
+
+      let currentFilter = 'all';
+
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentFilter = btn.dataset.filter;
+          applyFilter(currentFilter);
+        });
+      });
+
+      function applyFilter(filter) {
+        document.querySelectorAll('.test-item').forEach(item => {
+          const isPassed = item.classList.contains('passed');
+          if (filter === 'all') {
+            item.style.display = 'flex';
+          } else if (filter === 'passed') {
+            item.style.display = isPassed ? 'flex' : 'none';
+          } else if (filter === 'failed') {
+            item.style.display = !isPassed ? 'flex' : 'none';
+          }
+        });
+      }
+
+      async function startTesting() {
+        suitesContainer.innerHTML = '';
+        metricTotal.textContent = '0';
+        metricPassed.textContent = '0';
+        metricFailed.textContent = '0';
+        metricTime.textContent = '0 ms';
+        progressFill.style.width = '0%';
+        progressFill.classList.remove('has-errors');
+        progressStatus.textContent = 'Ejecutando pruebas...';
+        progressPercent.textContent = '0%';
+
+        if (!window.LaCasonaTests) {
+          progressStatus.textContent = 'Error: no se encontró LaCasonaTests';
+          return;
+        }
+
+        const runner = window.LaCasonaTests;
+
+        // Renderizar estructura inicial de suites
+        const suiteCards = {};
+        runner.suites.forEach(suite => {
+          const card = document.createElement('div');
+          card.className = 'suite-card';
+          card.innerHTML = `
+            <div class="suite-header">
+              <span>${suite.name}</span>
+              <div class="suite-counts" id="counts-${sanitizeId(suite.name)}">
+                <span style="color:var(--text-muted)">0 / ${suite.tests.length}</span>
+              </div>
+            </div>
+            <ul class="test-list" id="list-${sanitizeId(suite.name)}"></ul>
+          `;
+          suitesContainer.appendChild(card);
+          suiteCards[suite.name] = card;
+        });
+
+        runner.onUpdate(event => {
+          if (event.type === 'test_end') {
+            const list = document.getElementById(`list-${sanitizeId(event.suite)}`);
+            if (list) {
+              const li = document.createElement('li');
+              li.className = `test-item ${event.test.passed ? 'passed' : 'failed'}`;
+              li.innerHTML = `
+                <div class="test-row">
+                  <span class="test-status-icon ${event.test.passed ? 'passed' : 'failed'}">
+                    ${event.test.passed ? '✓' : '✗'}
+                  </span>
+                  <span class="test-name">${event.test.name}</span>
+                </div>
+                ${event.test.error ? `<div class="test-error">${event.test.error}</div>` : ''}
+              `;
+              list.appendChild(li);
+            }
+
+            metricTotal.textContent = event.stats.total;
+            metricPassed.textContent = event.stats.passed;
+            metricFailed.textContent = event.stats.failed;
+
+            if (event.stats.failed > 0) {
+              progressFill.classList.add('has-errors');
+            }
+
+            const totalExpected = runner.suites.reduce((sum, s) => sum + s.tests.length, 0);
+            const pct = Math.round((event.stats.total / totalExpected) * 100);
+            progressFill.style.width = pct + '%';
+            progressPercent.textContent = pct + '%';
+          } else if (event.type === 'all_end') {
+            metricTime.textContent = `${event.stats.duration} ms`;
+            progressStatus.textContent = event.stats.failed === 0 
+              ? '🎉 ¡Todas las pruebas han pasado exitosamente!' 
+              : `⚠️ ${event.stats.failed} prueba(s) fallaron. Revisa los detalles abajo.`;
+            applyFilter(currentFilter);
+          }
+        });
+
+        await runner.run();
+      }
+
+      function sanitizeId(str) {
+        return str.replace(/[^a-zA-Z0-9]/g, '_');
+      }
+
+      runAgainBtn.addEventListener('click', () => {
+        window.location.reload();
+      });
+
+      // Ejecutar automáticamente al cargar
+      window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(startTesting, 150);
+      });
+    })();
+  </script>
+</body>
+</html>

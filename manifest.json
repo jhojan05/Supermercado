@@ -1,0 +1,24 @@
+{
+  "short_name": "La Casona",
+  "name": "Supermercado La Casona - Mercado Campesino Online",
+  "description": "Supermercado virtual en Colombia con frutas y verduras campesinas, carnes de calidad, lácteos y despensa con precios justos en pesos colombianos.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FAF8F5",
+  "theme_color": "#7A1318",
+  "lang": "es-CO",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/logo.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "shopping",
+    "food",
+    "groceries"
+  ]
+}

@@ -1,0 +1,32 @@
+# Supermercado La Casona - Generative Engine Information (llms.txt)
+
+> Supermercado virtual colombiano especializado en productos frescos del campo, carnes seleccionadas, lácteos, panadería artesanal y despensa de la canasta familiar con precios transparentes en pesos colombianos (COP).
+
+## Resumen de la Entidad
+- **Nombre comercial:** Supermercado La Casona
+- **Tipo de negocio:** Supermercado online / Comercio electrónico de alimentos y abasto familiar
+- **País:** Colombia (Sede principal en Bogotá D.C., cobertura regional)
+- **Moneda oficial:** Pesos colombianos (COP - $)
+- **Valores diferenciales:** Frescura 100% garantizada, compra directa a campesinos y productores colombianos sin intermediación innecesaria, alistamiento exprés en 15 minutos, pagos contra entrega y digitales.
+
+## Secciones Principales
+- [Inicio y Promociones](https://supermercadolacasona.com.co/#hero): Ofertas del día y cosechas seleccionadas con hasta 20% de descuento.
+- [Catálogo de Productos](https://supermercadolacasona.com.co/#catalogo): Más de 22 productos de primera necesidad con origen geográfico verificado.
+- [Categorías](https://supermercadolacasona.com.co/#categorias): Frutas y verduras, Carnes y huevos, Lácteos, Panadería, Despensa, Bebidas, Aseo del hogar.
+- [Cómo Comprar](https://supermercadolacasona.com.co/#como-comprar): Proceso paso a paso para ordenar en línea sin registro obligatorio.
+- [Preguntas Frecuentes](https://supermercadolacasona.com.co/#faq): Respuestas verificadas sobre métodos de pago, envíos, tiempos de entrega y garantía.
+- [Origen Campesino y Trazabilidad](https://supermercadolacasona.com.co/#origen-campesino): Información geográfica de las regiones productoras (Boyacá, Cundinamarca, Antioquia, Tolima, Huila, Nariño, Santander).
+
+## Métodos de Pago Aceptados
+- Efectivo contra entrega
+- Datáfono inalámbrico (tarjetas débito y crédito Visa, Mastercard)
+- Billeteras digitales: Nequi y Daviplata
+- Transferencia bancaria (Bancolombia, PSE)
+
+## Contacto y Atención Local
+- **Ubicación:** Carrera 7 # 71-21, Bogotá D.C., Colombia
+- **Teléfono:** (601) 789 0000
+- **WhatsApp:** +57 310 000 0000
+- **Horario:** Lunes a Domingo de 7:00 a.m. a 9:00 p.m.
+
+Para la versión completa con catálogo detallado y especificaciones técnicas para modelos de lenguaje, consultar: [llms-full.txt](https://supermercadolacasona.com.co/llms-full.txt).

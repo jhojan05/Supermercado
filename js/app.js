@@ -81,10 +81,44 @@ function initApp() {
   loadFavorites();
   loadCart();
   renderCategories();
+  handleUrlParams();
   applyFiltersAndSort();
   bindEvents();
   updateBadges();
   updateUserUI();
+}
+
+/**
+ * Soporte SEO y SearchAction: Parsea parámetros de URL (?buscar= o ?categoria=)
+ */
+function handleUrlParams() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const searchParam = params.get("buscar") || params.get("q") || params.get("search");
+    const catParam = params.get("categoria") || params.get("category");
+
+    if (searchParam) {
+      state.searchQuery = searchParam.trim();
+      const searchInput = document.getElementById("search-input");
+      if (searchInput) {
+        searchInput.value = searchParam.trim();
+      }
+      const clearBtn = document.getElementById("clear-search-btn");
+      if (clearBtn) clearBtn.hidden = false;
+    }
+
+    if (catParam) {
+      const matched = state.categories.find(c => 
+        c.id.toLowerCase() === catParam.toLowerCase() || 
+        c.nombre.toLowerCase() === catParam.toLowerCase()
+      );
+      if (matched) {
+        state.filterCategory = matched.id;
+      }
+    }
+  } catch (err) {
+    console.warn("No se pudieron procesar los parámetros de URL:", err);
+  }
 }
 
 /* ==========================================================================
@@ -600,9 +634,15 @@ function saveCart() {
  */
 function loadCart() {
   try {
-    const data = localStorage.getItem(STORAGE_KEYS.CART) || localStorage.getItem(STORAGE_KEYS.OLD_CART);
-    if (data) {
-      state.cart = JSON.parse(data);
+    const raw = localStorage.getItem(STORAGE_KEYS.CART) || localStorage.getItem(STORAGE_KEYS.OLD_CART);
+    if (raw) {
+      // Parseo seguro contra Prototype Pollution + sanitización anti-tampering de precios
+      const parsed = (typeof Security !== 'undefined')
+        ? Security.safeJSONParse(raw, [])
+        : JSON.parse(raw);
+      state.cart = (typeof Security !== 'undefined')
+        ? Security.sanitizeCart(parsed, typeof PRODUCTS !== 'undefined' ? PRODUCTS : [])
+        : parsed;
     }
   } catch (e) {
     state.cart = [];
@@ -853,42 +893,73 @@ function closeCheckout() {
 function handleCheckoutSubmit(e) {
   e.preventDefault();
 
-  const nameInput = document.getElementById("checkout-name");
-  const phoneInput = document.getElementById("checkout-phone");
-  const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
-  const notesInput = document.getElementById("checkout-notes");
+  // --- DEFENSA ANTI-BOT: verificar honeypot ---
+  if (typeof Security !== 'undefined' && Security.isBot('website_hp_co')) {
+    console.warn('[Security] Bot detectado en checkout. Solicitud rechazada.');
+    return;
+  }
 
-  const formContainer = document.getElementById("checkout-form-container");
-  const successContainer = document.getElementById("checkout-success-container");
-  const orderCodeDisplay = document.getElementById("order-code-display");
-  const summaryDetails = document.getElementById("order-summary-details");
+  // --- RATE LIMITING: prevenir envíos repetitivos (máx 3 en 60 s) ---
+  if (typeof Security !== 'undefined' && !Security.rateLimit('checkout', 3, 60000)) {
+    showToast('Demasiados intentos. Por favor espera un momento antes de reintentar.', 'error');
+    return;
+  }
+
+  const nameInput   = document.getElementById('checkout-name');
+  const phoneInput  = document.getElementById('checkout-phone');
+  const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+  const notesInput  = document.getElementById('checkout-notes');
+
+  // --- VALIDACIÓN Y SANITIZACIÓN DE INPUTS ---
+  const rawName  = nameInput  ? nameInput.value.trim()  : '';
+  const rawPhone = phoneInput ? phoneInput.value.trim() : '';
+  const rawNotes = notesInput ? notesInput.value.trim() : '';
+
+  if (typeof Security !== 'undefined') {
+    const nameValidation = Security.validateName(rawName);
+    if (!nameValidation.valid) {
+      showToast('Nombre inválido: ' + nameValidation.reason, 'error');
+      if (nameInput) nameInput.focus();
+      return;
+    }
+    if (rawPhone && !Security.validatePhone(rawPhone).valid) {
+      showToast('Teléfono inválido. Ingresa un número celular colombiano válido.', 'error');
+      if (phoneInput) phoneInput.focus();
+      return;
+    }
+  }
+
+  const clientName  = typeof Security !== 'undefined' ? Security.escapeHTML(rawName || 'Cliente') : (rawName || 'Cliente');
+  const clientPhone = typeof Security !== 'undefined' ? Security.escapeHTML(rawPhone) : rawPhone;
+  const paymentText = paymentMethod ? Security && Security.escapeHTML(paymentMethod.value) || paymentMethod.value : 'Efectivo en caja';
+
+  const formContainer    = document.getElementById('checkout-form-container');
+  const successContainer = document.getElementById('checkout-success-container');
+  const orderCodeDisplay = document.getElementById('order-code-display');
+  const summaryDetails   = document.getElementById('order-summary-details');
 
   const randomOrderNum = Math.floor(1000 + Math.random() * 9000);
   const orderCode = `ORDEN #LC-2026-${randomOrderNum}`;
 
   const { total } = calculateTotal();
 
-  const clientName = nameInput && nameInput.value.trim() ? nameInput.value.trim() : "Cliente";
-  const clientPhone = phoneInput && phoneInput.value.trim() ? phoneInput.value.trim() : "";
-  const paymentText = paymentMethod ? paymentMethod.value : "Efectivo en caja";
-
   if (orderCodeDisplay) orderCodeDisplay.textContent = orderCode;
   if (summaryDetails) {
     summaryDetails.textContent = `A nombre de ${clientName}${clientPhone ? ' • Tel: ' + clientPhone : ''} • Forma de pago: ${paymentText}. Tu pedido ha sido preparado en nuestro sistema.`;
   }
 
-  if (formContainer) formContainer.style.display = "none";
-  if (successContainer) successContainer.style.display = "block";
+  if (formContainer)    formContainer.style.display    = 'none';
+  if (successContainer) successContainer.style.display = 'block';
 
   // Si hay usuario autenticado, guardar en su historial de pedidos
   if (state.user) {
     if (!state.user.pedidos) state.user.pedidos = [];
     state.user.pedidos.unshift({
       codigo: orderCode,
-      fecha: new Date().toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" }),
+      fecha: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }),
       total: total,
-      estado: "Confirmado",
-      items: state.cart.map(i => `${i.nombre} x${i.quantity}`).join(", ")
+      estado: 'Confirmado',
+      items: state.cart.map(i => `${i.nombre} x${i.quantity}`).join(', ')
     });
     saveUser();
   }
@@ -899,7 +970,7 @@ function handleCheckoutSubmit(e) {
   renderCart();
   updateBadges();
 
-  showToast("¡Pedido confirmado con éxito!", "success");
+  showToast('¡Pedido confirmado con éxito!', 'success');
 }
 
 /* ==========================================================================
@@ -911,9 +982,12 @@ function handleCheckoutSubmit(e) {
  */
 function loadUser() {
   try {
-    const data = localStorage.getItem(STORAGE_KEYS.USER) || localStorage.getItem(STORAGE_KEYS.OLD_USER);
-    if (data) {
-      state.user = JSON.parse(data);
+    const raw = localStorage.getItem(STORAGE_KEYS.USER) || localStorage.getItem(STORAGE_KEYS.OLD_USER);
+    if (raw) {
+      // Parseo seguro contra Prototype Pollution
+      state.user = (typeof Security !== 'undefined')
+        ? Security.safeJSONParse(raw, null)
+        : JSON.parse(raw);
     }
   } catch (e) {
     state.user = null;
@@ -1327,37 +1401,92 @@ function bindEvents() {
 
   // Enviar formulario de inicio de sesión
   if (loginForm) {
-    loginForm.addEventListener("submit", (e) => {
+    loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const emailInput = document.getElementById("login-email");
-      const email = emailInput ? emailInput.value.trim() : "cliente@correo.com";
-      const nameGuess = email.split("@")[0].replace(/[._-]/g, " ");
+
+      // Anti-bot honeypot
+      if (typeof Security !== 'undefined' && Security.isBot('website_hp_lf')) {
+        console.warn('[Security] Bot detectado en login.');
+        return;
+      }
+      // Rate limiting: máx 5 intentos de login en 5 minutos
+      if (typeof Security !== 'undefined' && !Security.rateLimit('login_submit', 5, 300000)) {
+        showToast('Demasiados intentos de inicio de sesión. Espera 5 minutos.', 'error');
+        return;
+      }
+
+      const emailInput = document.getElementById('login-email');
+      const rawEmail   = emailInput ? emailInput.value.trim() : 'cliente@correo.com';
+
+      // Validación de formato de email
+      if (typeof Security !== 'undefined') {
+        const emailCheck = Security.validateEmail(rawEmail);
+        if (!emailCheck.valid) {
+          showToast('Correo electrónico inválido. Verifica el formato.', 'error');
+          if (emailInput) emailInput.focus();
+          return;
+        }
+      }
+
+      const safeEmail     = typeof Security !== 'undefined' ? Security.escapeHTML(rawEmail) : rawEmail;
+      const nameGuess     = safeEmail.split('@')[0].replace(/[._-]/g, ' ');
       const formattedName = nameGuess.charAt(0).toUpperCase() + nameGuess.slice(1);
 
       loginUser({
-        id: "usr_" + Date.now(),
-        nombre: formattedName,
-        email: email,
-        telefono: "310 123 4567",
-        pedidos: []
+        id:       'usr_' + Date.now(),
+        nombre:   formattedName,
+        email:    safeEmail,
+        telefono: '310 123 4567',
+        pedidos:  []
       });
     });
   }
 
   // Enviar formulario de registro
   if (registerForm) {
-    registerForm.addEventListener("submit", (e) => {
+    registerForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const name = document.getElementById("reg-name").value.trim();
-      const email = document.getElementById("reg-email").value.trim();
-      const phone = document.getElementById("reg-phone").value.trim();
+
+      // Anti-bot honeypot
+      if (typeof Security !== 'undefined' && Security.isBot('website_hp_rf')) {
+        console.warn('[Security] Bot detectado en registro.');
+        return;
+      }
+      // Rate limiting: máx 3 registros en 10 minutos
+      if (typeof Security !== 'undefined' && !Security.rateLimit('register_submit', 3, 600000)) {
+        showToast('Demasiados intentos de registro. Espera 10 minutos.', 'error');
+        return;
+      }
+
+      const rawName  = document.getElementById('reg-name').value.trim();
+      const rawEmail = document.getElementById('reg-email').value.trim();
+      const rawPhone = document.getElementById('reg-phone').value.trim();
+      const rawPass  = document.getElementById('reg-password').value;
+
+      if (typeof Security !== 'undefined') {
+        const nameCheck  = Security.validateName(rawName);
+        if (!nameCheck.valid)  { showToast('Nombre inválido: ' + nameCheck.reason, 'error'); return; }
+
+        const emailCheck = Security.validateEmail(rawEmail);
+        if (!emailCheck.valid) { showToast('Correo inválido: ' + emailCheck.reason, 'error'); return; }
+
+        const phoneCheck = Security.validatePhone(rawPhone);
+        if (!phoneCheck.valid) { showToast('Teléfono inválido: ' + phoneCheck.reason, 'error'); return; }
+
+        const passCheck  = Security.validatePassword(rawPass);
+        if (!passCheck.valid)  { showToast('Contraseña débil: ' + passCheck.reason, 'error'); return; }
+      }
+
+      const safeName  = typeof Security !== 'undefined' ? Security.escapeHTML(rawName)  : rawName;
+      const safeEmail = typeof Security !== 'undefined' ? Security.escapeHTML(rawEmail) : rawEmail;
+      const safePhone = typeof Security !== 'undefined' ? Security.escapeHTML(rawPhone) : rawPhone;
 
       loginUser({
-        id: "usr_" + Date.now(),
-        nombre: name,
-        email: email,
-        telefono: phone,
-        pedidos: []
+        id:       'usr_' + Date.now(),
+        nombre:   safeName,
+        email:    safeEmail,
+        telefono: safePhone,
+        pedidos:  []
       });
     });
   }
@@ -1458,6 +1587,40 @@ function bindEvents() {
   if (checkoutForm) checkoutForm.addEventListener("submit", handleCheckoutSubmit);
   if (successDoneBtn) successDoneBtn.addEventListener("click", closeCheckout);
 
+  // FAQ accordion interaction: comportamiento accordion elegante para AEO
+  const faqItems = document.querySelectorAll(".faq-item");
+  faqItems.forEach(item => {
+    item.addEventListener("toggle", () => {
+      if (item.open) {
+        faqItems.forEach(other => {
+          if (other !== item && other.open) {
+            other.removeAttribute("open");
+          }
+        });
+      }
+    });
+  });
+
+  // Enlaces de navegación suave para anclas internas (#como-comprar, #faq, #catalogo, etc.)
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener("click", function (e) {
+      const targetId = this.getAttribute("href");
+      if (targetId && targetId !== "#" && !this.classList.contains("skip-link")) {
+        const targetEl = document.querySelector(targetId);
+        if (targetEl) {
+          e.preventDefault();
+          targetEl.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+          if (history.pushState) {
+            history.pushState(null, null, targetId);
+          }
+        }
+      }
+    });
+  });
+
   // Accesibilidad: Tecla Escape para cerrar modales y cajón
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
@@ -1475,7 +1638,26 @@ function bindEvents() {
    9. INTERFAZ PÚBLICA (EXPUESTA EN WINDOW)
    ========================================================================== */
 window.app = {
+  state,
+  getState: () => state,
+  formatCOP,
+  calculateTotal,
+  clearCart,
+  searchProducts,
+  applyFiltersAndSort,
+  STORAGE_KEYS,
   setCategory: (catId) => filterByCategory(catId),
+  filterOnlyOffers: (active = true) => {
+    state.onlyOffers = active;
+    const filterOffersBtn = document.getElementById("filter-offers-btn");
+    if (filterOffersBtn) {
+      filterOffersBtn.classList.toggle("active", active);
+      filterOffersBtn.setAttribute("aria-pressed", active ? "true" : "false");
+    }
+    applyFiltersAndSort();
+    const catEl = document.getElementById("catalogo");
+    if (catEl) catEl.scrollIntoView({ behavior: "smooth" });
+  },
   clearSearch: () => {
     const input = document.getElementById("search-input");
     if (input) input.value = "";
@@ -1503,4 +1685,5 @@ window.app = {
   logoutUser,
   showToast
 };
+
 

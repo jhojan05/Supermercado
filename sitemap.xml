@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <!-- Página principal de Supermercado La Casona -->
+  <url>
+    <loc>https://supermercadolacasona.com.co/</loc>
+    <lastmod>2026-10-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="es-CO" href="https://supermercadolacasona.com.co/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://supermercadolacasona.com.co/" />
+    <image:image>
+      <image:loc>https://supermercadolacasona.com.co/assets/og-banner.jpg</image:loc>
+      <image:title>Supermercado La Casona - Mercado Campesino y Alimentos Frescos en Colombia</image:title>
+      <image:caption>Canasta de frutas, verduras, panadería artesanal y café especial de origen colombiano</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://supermercadolacasona.com.co/assets/logo.svg</image:loc>
+      <image:title>Logotipo Supermercado La Casona</image:title>
+    </image:image>
+  </url>
+
+  <!-- Sección Catálogo de Productos -->
+  <url>
+    <loc>https://supermercadolacasona.com.co/#catalogo</loc>
+    <lastmod>2026-10-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Sección Categorías de la Canasta Familiar -->
+  <url>
+    <loc>https://supermercadolacasona.com.co/#categorias</loc>
+    <lastmod>2026-10-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Sección Cómo Comprar (AEO / HowTo) -->
+  <url>
+    <loc>https://supermercadolacasona.com.co/#como-comprar</loc>
+    <lastmod>2026-10-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Sección Preguntas Frecuentes y Centro de Respuestas (AEO / FAQ) -->
+  <url>
+    <loc>https://supermercadolacasona.com.co/#faq</loc>
+    <lastmod>2026-10-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Sección Compromiso de Origen y Red Campesina (GEO) -->
+  <url>
+    <loc>https://supermercadolacasona.com.co/#origen-campesino</loc>
+    <lastmod>2026-10-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+</urlset>
