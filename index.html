@@ -5,11 +5,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description"
-    content="Supermercado La Casona - Frutas, verduras frescas, carnes, lácteos y despensa con entrega a domicilio rápida en Colombia. Calidad y ahorro garantizado.">
+    content="Supermercado La Casona - Frutas y verduras frescas, carnes seleccionadas, lácteos y despensa en Colombia. Calidad premium, precios justos y compras ágiles.">
   <meta name="keywords"
-    content="supermercado virtual, mercado online, frutas y verduras, alimentos frescos, colombia, compras">
+    content="supermercado virtual, mercado online, frutas y verduras, alimentos frescos, colombia, canasta familiar, promociones">
   <meta name="author" content="Supermercado La Casona">
-  <title>Supermercado La Casona | Tu mercado fresco directo a tu hogar</title>
+  <title>Supermercado La Casona | Calidad, frescura y ahorro para tu despensa</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Favicon SVG -->
   <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
@@ -27,17 +32,16 @@
   <aside class="top-announcement" aria-label="Información y promociones vigentes">
     <div class="container announcement-inner">
       <div class="announcement-item">
-        <span>🚚</span>
-        <span>Envío <strong>GRATIS</strong> en compras superiores a <span class="announcement-highlight">$ 50.000
-            COP</span></span>
+        <span>🎉</span>
+        <span>Hasta <strong>20% de descuento</strong> en cosechas seleccionadas</span>
       </div>
       <div class="announcement-item">
         <span>🌱</span>
-        <span>Productos 100% frescos de campesinos colombianos</span>
+        <span>Productos 100% frescos directo del campo colombiano</span>
       </div>
       <div class="announcement-item">
         <span>⚡</span>
-        <span>Entrega estimada: <strong>Mismo día (1 a 2 horas)</strong></span>
+        <span>Alistamiento exprés: <strong>Prepara tu orden sin filas ni demoras</strong></span>
       </div>
     </div>
   </aside>
@@ -76,11 +80,11 @@
           <li><a href="#hero" class="nav-link active">Inicio</a></li>
           <li><a href="#categorias" class="nav-link">Categorías</a></li>
           <li><a href="#catalogo" class="nav-link">Catálogo</a></li>
-          <li><button type="button" id="filter-offers-nav" class="nav-link"
-              style="background:none;border:none;cursor:pointer;">Ofertas</button></li>
-          <!-- Único botón de Acceso en el Menú de Navegación (sin emoji) -->
+          <li><button type="button" id="filter-offers-nav" class="nav-link offers-pill-nav">Ofertas 🔥</button></li>
+          <!-- Botón de Acceso en el Menú de Navegación -->
           <li class="nav-auth-item user-menu-wrapper" id="user-menu-wrapper">
             <button type="button" class="nav-link nav-login-link" id="nav-login-btn" aria-haspopup="true" aria-expanded="false">
+              <span class="user-icon-bullet" aria-hidden="true">👤</span>
               <span id="nav-login-text">Iniciar sesión</span>
             </button>
 
@@ -95,14 +99,14 @@
               </div>
               <div class="dropdown-divider"></div>
               <button type="button" class="dropdown-item" id="btn-dropdown-profile" role="menuitem">
-                Mis datos y direcciones
+                <span>👤</span> Mi perfil y cuenta
               </button>
               <button type="button" class="dropdown-item" id="btn-dropdown-orders" role="menuitem">
-                Mis pedidos simulados
+                <span>📦</span> Mis pedidos registrados
               </button>
               <div class="dropdown-divider"></div>
               <button type="button" class="dropdown-item dropdown-logout-btn" id="btn-dropdown-logout" role="menuitem">
-                Cerrar sesión
+                <span>🚪</span> Cerrar sesión
               </button>
             </div>
           </li>
@@ -113,12 +117,15 @@
       <div class="header-actions">
         <!-- Botón Móvil de Búsqueda -->
         <button type="button" class="mobile-toggle-btn" id="mobile-search-toggle" aria-label="Abrir buscador móvil">
-          🔍
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
         </button>
 
         <!-- Botón Favoritos -->
         <button type="button" class="action-btn" id="fav-toggle-btn" aria-label="Ver productos favoritos">
-          <span aria-hidden="true">❤️</span>
+          <span aria-hidden="true" class="action-icon">❤️</span>
           <span class="action-btn-text">Favoritos</span>
           <span class="badge-count" id="fav-badge-count">0</span>
         </button>
@@ -126,7 +133,7 @@
         <!-- Botón Carrito de Compras -->
         <button type="button" class="action-btn cart-action-btn" id="cart-toggle-btn"
           aria-label="Abrir carrito de compras">
-          <span aria-hidden="true">🛒</span>
+          <span aria-hidden="true" class="action-icon">🛒</span>
           <span class="action-btn-text">Carrito</span>
           <span class="badge-count" id="cart-badge-count">0</span>
         </button>
@@ -142,11 +149,10 @@
       <div class="container">
         <div class="hero-banner">
           <div class="hero-text-content">
-            <span class="hero-badge-tag">🌿 Cosecha Fresca de Temporada</span>
-            <h1 class="hero-title">Tu mercado campesino, directo a tu <span>hogar</span></h1>
+            <span class="hero-badge-tag">🌿 Cosecha Fresca & Precios Justos</span>
+            <h1 class="hero-title">El mejor mercado campesino con la <span>máxima frescura</span></h1>
             <p class="hero-subtitle">
-              Disfruta de frutas y verduras frescas, carnes seleccionadas y los productos de la canasta familiar con la
-              mejor calidad y precios justos en pesos colombianos.
+              Descubre frutas y verduras seleccionadas, carnes de calidad y despensa completa con los mejores precios en pesos colombianos.
             </p>
             <div class="hero-actions">
               <a href="#catalogo" class="btn btn-primary" id="hero-cta-btn">
@@ -175,22 +181,22 @@
           <div class="feature-card">
             <div class="feature-icon" aria-hidden="true">⚡</div>
             <div class="feature-info">
-              <h2>Entrega Exprés</h2>
-              <p>Tu pedido en tu puerta en 1 a 2 horas</p>
+              <h2>Alistamiento Exprés</h2>
+              <p>Prepara tu orden en minutos sin filas</p>
             </div>
           </div>
           <div class="feature-card">
             <div class="feature-icon" aria-hidden="true">💰</div>
             <div class="feature-info">
-              <h2>Ahorro en Cada Compra</h2>
-              <p>Precios sin intermediarios costosos</p>
+              <h2>Precios de Origen</h2>
+              <p>Ahorro garantizado sin intermediarios</p>
             </div>
           </div>
           <div class="feature-card">
             <div class="feature-icon" aria-hidden="true">🛡️</div>
             <div class="feature-info">
-              <h2>Compra Segura</h2>
-              <p>Paga al recibir en efectivo o datáfono</p>
+              <h2>Compra Confiable</h2>
+              <p>Múltiples opciones de pago seguro</p>
             </div>
           </div>
         </div>
@@ -283,17 +289,6 @@
       </button>
     </div>
 
-    <!-- Barra de progreso para envío gratis -->
-    <div class="shipping-progress-box">
-      <div class="shipping-progress-text">
-        <span id="shipping-progress-label">Agrega productos para envío gratis</span>
-        <span id="shipping-progress-amount">$ 50.000</span>
-      </div>
-      <div class="shipping-bar-track">
-        <div class="shipping-bar-fill" id="shipping-bar-fill" style="width: 0%;"></div>
-      </div>
-    </div>
-
     <!-- Lista de artículos en el carrito -->
     <div class="cart-items-list" id="cart-items-list" tabindex="0" aria-label="Artículos en tu carrito">
       <!-- Inyectado por renderCart() -->
@@ -302,24 +297,20 @@
     <!-- Resumen y Acciones del Carrito -->
     <div class="cart-footer" id="cart-footer">
       <div class="cart-summary-row">
-        <span>Subtotal</span>
+        <span>Subtotal productos</span>
         <span id="cart-subtotal">$ 0</span>
       </div>
       <div class="cart-summary-row" id="cart-discount-row" style="display: none;">
         <span>Descuento aplicado</span>
         <span id="cart-discount" style="color: var(--color-success); font-weight: bold;">-$ 0</span>
       </div>
-      <div class="cart-summary-row">
-        <span>Costo de envío estimado</span>
-        <span id="cart-shipping">$ 0</span>
-      </div>
       <div class="cart-summary-row total-row">
         <span>Total estimado</span>
         <span id="cart-total">$ 0</span>
       </div>
       <button type="button" class="cart-checkout-btn" id="checkout-open-btn">
-        <span>Simular Pedido</span>
-        <span aria-hidden="true">💳</span>
+        <span>Confirmar Pedido</span>
+        <span aria-hidden="true">✓</span>
       </button>
       <button type="button" class="cart-clear-btn" id="clear-cart-btn">
         Vaciar carrito
@@ -352,86 +343,65 @@
     aria-hidden="true">
     <div class="modal-card">
       <div class="modal-header">
-        <h2 id="checkout-modal-title" class="modal-title">Simulación de Pedido 🛒</h2>
+        <h2 id="checkout-modal-title" class="modal-title">Confirmación de Pedido 🛒</h2>
         <button type="button" class="drawer-close-btn" id="close-checkout-btn" aria-label="Cerrar pedido">
           &times;
         </button>
       </div>
       <div class="modal-body">
         <div id="checkout-form-container">
-          <p style="font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 16px;">
-            Este es un prototipo funcional. No se realizarán cobros reales ni se enviarán datos bancarios.
+          <p class="checkout-notice">
+            Completa tus datos de contacto para simular tu orden de compra en el supermercado.
           </p>
           <form id="checkout-form">
-            <div class="form-group">
-              <label for="checkout-name" class="form-label">Nombre completo *</label>
-              <input type="text" id="checkout-name" class="form-input" placeholder="Ej. Carlos Restrepo" required>
-            </div>
-
             <div class="form-grid-2">
+              <div class="form-group">
+                <label for="checkout-name" class="form-label">Nombre completo *</label>
+                <input type="text" id="checkout-name" class="form-input" placeholder="Ej. Carlos Restrepo" required>
+              </div>
               <div class="form-group">
                 <label for="checkout-phone" class="form-label">Teléfono celular *</label>
                 <input type="tel" id="checkout-phone" class="form-input" placeholder="Ej. 312 456 7890" required>
               </div>
-              <div class="form-group">
-                <label for="checkout-city" class="form-label">Ciudad / Municipio *</label>
-                <select id="checkout-city" class="form-select" required>
-                  <option value="Bogotá D.C.">Bogotá D.C.</option>
-                  <option value="Medellín">Medellín</option>
-                  <option value="Cali">Cali</option>
-                  <option value="Barranquilla">Barranquilla</option>
-                  <option value="Bucaramanga">Bucaramanga</option>
-                  <option value="Tunja">Tunja</option>
-                  <option value="Otra">Otra ciudad</option>
-                </select>
-              </div>
             </div>
 
             <div class="form-group">
-              <label for="checkout-address" class="form-label">Dirección de entrega *</label>
-              <input type="text" id="checkout-address" class="form-input" placeholder="Ej. Carrera 15 # 85-32 Apto 402"
-                required>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Método de pago simulado *</label>
+              <label class="form-label">Forma de pago *</label>
               <div class="payment-options-grid">
                 <label class="payment-option-label">
-                  <input type="radio" name="paymentMethod" value="Contraentrega en Efectivo" checked>
-                  <span>💵 Efectivo contraentrega</span>
+                  <input type="radio" name="paymentMethod" value="Efectivo en caja" checked>
+                  <span>💵 Efectivo</span>
                 </label>
                 <label class="payment-option-label">
-                  <input type="radio" name="paymentMethod" value="Datáfono contraentrega">
-                  <span>💳 Datáfono contraentrega</span>
+                  <input type="radio" name="paymentMethod" value="Datáfono / Tarjeta">
+                  <span>💳 Datáfono / Tarjeta</span>
                 </label>
                 <label class="payment-option-label">
                   <input type="radio" name="paymentMethod" value="Transferencia Nequi / Daviplata">
                   <span>📱 Nequi / Daviplata</span>
                 </label>
                 <label class="payment-option-label">
-                  <input type="radio" name="paymentMethod" value="Tarjeta Débito/Crédito Simulada">
-                  <span>🏦 Tarjeta Simulada</span>
+                  <input type="radio" name="paymentMethod" value="Transferencia Bancaria">
+                  <span>🏦 Transferencia Bancaria</span>
                 </label>
               </div>
             </div>
 
             <div class="form-group">
-              <label for="checkout-notes" class="form-label">Instrucciones para el domiciliario (opcional)</label>
+              <label for="checkout-notes" class="form-label">Notas o requerimientos especiales (opcional)</label>
               <textarea id="checkout-notes" class="form-textarea" rows="2"
-                placeholder="Ej. Timbrar en portería, dejar con el vigilante..."></textarea>
+                placeholder="Ej. Frutas bien maduras, empacar lácteos por separado..."></textarea>
             </div>
 
-            <div
-              style="background-color: var(--color-bg-warm); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 18px;">
-              <div
-                style="display: flex; justify-content: space-between; font-weight: bold; color: var(--color-primary-dark);">
+            <div class="checkout-total-box">
+              <div class="checkout-total-row">
                 <span>Total a confirmar:</span>
                 <span id="checkout-modal-total">$ 0</span>
               </div>
             </div>
 
             <button type="submit" class="cart-checkout-btn" style="width: 100%;">
-              <span>Confirmar Pedido Simulado</span>
+              <span>Confirmar Mi Pedido</span>
               <span aria-hidden="true">✓</span>
             </button>
           </form>
@@ -440,16 +410,16 @@
         <!-- Pantalla de Éxito -->
         <div id="checkout-success-container" class="order-success-box" style="display: none;">
           <div class="success-icon-wrap">✓</div>
-          <h3 class="modal-title" style="margin-bottom: 8px;">¡Pedido Simulado Exitoso!</h3>
+          <h3 class="modal-title" style="margin-bottom: 8px;">¡Pedido Confirmado con Éxito!</h3>
           <p style="color: var(--color-text-muted); font-size: 0.92rem;">
-            Hemos registrado tu orden de demostración con éxito.
+            Hemos registrado tu orden de supermercado correctamente.
           </p>
           <div class="order-code-badge" id="order-code-display">
             ORDEN #LC-2026-7842
           </div>
-          <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 20px;"
+          <p style="font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 20px;"
             id="order-summary-details">
-            Entrega estimada en 90 minutos en tu dirección.
+            Alistamiento inmediato en tienda.
           </p>
           <button type="button" class="btn btn-primary" id="success-done-btn" style="width: 100%;">
             Seguir explorando el supermercado
@@ -648,12 +618,12 @@
         </div>
 
         <div>
-          <h3 class="footer-heading">Horarios y Cobertura</h3>
+          <h3 class="footer-heading">Horarios y Atención</h3>
           <div class="footer-contact-info">
             <p><strong>Lunes a Domingo:</strong> 7:00 a.m. a 9:00 p.m.</p>
             <p><strong>Línea de atención:</strong> (601) 789 0000</p>
             <p><strong>WhatsApp:</strong> +57 310 000 0000</p>
-            <p><strong>Cobertura:</strong> Principales ciudades de Colombia</p>
+            <p><strong>Atención al cliente:</strong> Asesoría personalizada en compras</p>
           </div>
         </div>
       </div>

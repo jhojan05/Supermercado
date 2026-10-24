@@ -17,9 +17,7 @@ const state = {
   filterCategory: "all",
   searchQuery: "",
   onlyOffers: false,
-  sortBy: "featured",
-  freeShippingThreshold: 50000,
-  shippingCost: 5000
+  sortBy: "featured"
 };
 
 // Claves de persistencia en localStorage
@@ -38,14 +36,12 @@ const DEMO_USER = {
   nombre: "Carlos Restrepo",
   email: "carlos.restrepo@correo.com",
   telefono: "312 456 7890",
-  ciudad: "Bogotá D.C.",
-  direccion: "Carrera 15 # 85-32 Apto 402",
   pedidos: [
     {
       codigo: "ORDEN #LC-2026-3819",
       fecha: "12 Oct 2026",
       total: 42800,
-      estado: "Entregado",
+      estado: "Confirmado",
       items: "Manzana Roja x2, Leche Entera x2, Arepas x1"
     }
   ]
@@ -503,17 +499,12 @@ function calculateSubtotal() {
 }
 
 /**
- * Calcula el total del pedido considerando envío y promociones
+ * Calcula el total del pedido
  */
 function calculateTotal() {
   const subtotal = calculateSubtotal();
-  if (subtotal === 0) return { subtotal: 0, shipping: 0, total: 0, discount: 0 };
-
-  const isFreeShipping = subtotal >= state.freeShippingThreshold;
-  const shipping = isFreeShipping ? 0 : state.shippingCost;
-  const total = subtotal + shipping;
-
-  return { subtotal, shipping, total, discount: 0 };
+  if (subtotal === 0) return { subtotal: 0, total: 0, discount: 0 };
+  return { subtotal, total: subtotal, discount: 0 };
 }
 
 /**
@@ -522,34 +513,17 @@ function calculateTotal() {
 function renderCart() {
   const listEl = document.getElementById("cart-items-list");
   const subtotalEl = document.getElementById("cart-subtotal");
-  const shippingEl = document.getElementById("cart-shipping");
   const totalEl = document.getElementById("cart-total");
   const checkoutBtn = document.getElementById("checkout-open-btn");
   const clearBtn = document.getElementById("clear-cart-btn");
   const drawerCount = document.getElementById("drawer-item-count");
-  const shippingLabel = document.getElementById("shipping-progress-label");
-  const shippingAmount = document.getElementById("shipping-progress-amount");
-  const shippingFill = document.getElementById("shipping-bar-fill");
 
   if (!listEl) return;
 
   const totalCount = state.cart.reduce((sum, item) => sum + item.quantity, 0);
   if (drawerCount) drawerCount.textContent = totalCount;
 
-  const { subtotal, shipping, total } = calculateTotal();
-
-  // Actualizar barra de envío gratis
-  if (subtotal >= state.freeShippingThreshold) {
-    if (shippingLabel) shippingLabel.textContent = "¡Felicitaciones! Tienes envío GRATIS 🎉";
-    if (shippingAmount) shippingAmount.textContent = "Alcanzado";
-    if (shippingFill) shippingFill.style.width = "100%";
-  } else {
-    const diff = state.freeShippingThreshold - subtotal;
-    const percent = Math.min(100, Math.round((subtotal / state.freeShippingThreshold) * 100));
-    if (shippingLabel) shippingLabel.textContent = `Faltan ${formatCOP(diff)} para envío gratis`;
-    if (shippingAmount) shippingAmount.textContent = formatCOP(state.freeShippingThreshold);
-    if (shippingFill) shippingFill.style.width = `${percent}%`;
-  }
+  const { subtotal, total } = calculateTotal();
 
   // Si el carrito está vacío
   if (state.cart.length === 0) {
@@ -564,13 +538,14 @@ function renderCart() {
       </div>
     `;
     if (subtotalEl) subtotalEl.textContent = formatCOP(0);
-    if (shippingEl) shippingEl.textContent = formatCOP(0);
     if (totalEl) totalEl.textContent = formatCOP(0);
     if (checkoutBtn) checkoutBtn.disabled = true;
     if (clearBtn) clearBtn.style.display = "none";
     return;
   }
 
+  if (subtotalEl) subtotalEl.textContent = formatCOP(subtotal);
+  if (totalEl) totalEl.textContent = formatCOP(total);
   if (checkoutBtn) checkoutBtn.disabled = false;
   if (clearBtn) clearBtn.style.display = "block";
 
@@ -606,7 +581,6 @@ function renderCart() {
   }).join("");
 
   if (subtotalEl) subtotalEl.textContent = formatCOP(subtotal);
-  if (shippingEl) shippingEl.textContent = shipping === 0 ? "GRATIS" : formatCOP(shipping);
   if (totalEl) totalEl.textContent = formatCOP(total);
 }
 
@@ -847,12 +821,8 @@ function openCheckout() {
   if (state.user) {
     const nameInput = document.getElementById("checkout-name");
     const phoneInput = document.getElementById("checkout-phone");
-    const addressInput = document.getElementById("checkout-address");
-    const citySelect = document.getElementById("checkout-city");
     if (nameInput) nameInput.value = state.user.nombre || "";
     if (phoneInput) phoneInput.value = state.user.telefono || "";
-    if (addressInput) addressInput.value = state.user.direccion || "";
-    if (citySelect && state.user.ciudad) citySelect.value = state.user.ciudad;
   }
 
   if (formContainer) formContainer.style.display = "block";
@@ -878,16 +848,15 @@ function closeCheckout() {
 }
 
 /**
- * Procesa la simulación de checkout
+ * Procesa la confirmación de checkout
  */
 function handleCheckoutSubmit(e) {
   e.preventDefault();
 
   const nameInput = document.getElementById("checkout-name");
-  const addressInput = document.getElementById("checkout-address");
-  const citySelect = document.getElementById("checkout-city");
   const phoneInput = document.getElementById("checkout-phone");
   const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+  const notesInput = document.getElementById("checkout-notes");
 
   const formContainer = document.getElementById("checkout-form-container");
   const successContainer = document.getElementById("checkout-success-container");
@@ -899,9 +868,13 @@ function handleCheckoutSubmit(e) {
 
   const { total } = calculateTotal();
 
+  const clientName = nameInput && nameInput.value.trim() ? nameInput.value.trim() : "Cliente";
+  const clientPhone = phoneInput && phoneInput.value.trim() ? phoneInput.value.trim() : "";
+  const paymentText = paymentMethod ? paymentMethod.value : "Efectivo en caja";
+
   if (orderCodeDisplay) orderCodeDisplay.textContent = orderCode;
   if (summaryDetails) {
-    summaryDetails.textContent = `A nombre de ${nameInput ? nameInput.value : 'Cliente'} • Entrega estimada en ${addressInput ? addressInput.value : ''}, ${citySelect ? citySelect.value : ''} • Pago: ${paymentMethod ? paymentMethod.value : 'Efectivo'}.`;
+    summaryDetails.textContent = `A nombre de ${clientName}${clientPhone ? ' • Tel: ' + clientPhone : ''} • Forma de pago: ${paymentText}. Tu pedido ha sido preparado en nuestro sistema.`;
   }
 
   if (formContainer) formContainer.style.display = "none";
@@ -914,7 +887,7 @@ function handleCheckoutSubmit(e) {
       codigo: orderCode,
       fecha: new Date().toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" }),
       total: total,
-      estado: "En preparación",
+      estado: "Confirmado",
       items: state.cart.map(i => `${i.nombre} x${i.quantity}`).join(", ")
     });
     saveUser();
@@ -926,7 +899,7 @@ function handleCheckoutSubmit(e) {
   renderCart();
   updateBadges();
 
-  showToast("¡Pedido simulado registrado exitosamente!", "success");
+  showToast("¡Pedido confirmado con éxito!", "success");
 }
 
 /* ==========================================================================
@@ -1155,14 +1128,12 @@ function renderProfileModal() {
         <div class="profile-info-block">
           <strong>${escapeHTML(state.user.nombre)}</strong>
           <span>${escapeHTML(state.user.email)}</span>
-          <span style="display: block; margin-top: 4px; font-size: 0.82rem; color: var(--color-primary); font-weight: bold;">
-            📍 ${escapeHTML(state.user.direccion || "Dirección no registrada")}, ${escapeHTML(state.user.ciudad || "Colombia")}
-          </span>
+          ${state.user.telefono ? `<span style="display: block; margin-top: 4px; font-size: 0.84rem; color: var(--color-text-muted);">📞 ${escapeHTML(state.user.telefono)}</span>` : ""}
         </div>
       </div>
 
       <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--color-primary-dark); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-        <span>Historial de pedidos simulados</span>
+        <span>Historial de pedidos registrados</span>
         <span class="badge-status">${orders.length} pedidos</span>
       </h3>
 
@@ -1368,8 +1339,6 @@ function bindEvents() {
         nombre: formattedName,
         email: email,
         telefono: "310 123 4567",
-        ciudad: "Bogotá D.C.",
-        direccion: "Calle 100 # 15-20",
         pedidos: []
       });
     });
@@ -1388,8 +1357,6 @@ function bindEvents() {
         nombre: name,
         email: email,
         telefono: phone,
-        ciudad: "Bogotá D.C.",
-        direccion: "Dirección principal",
         pedidos: []
       });
     });

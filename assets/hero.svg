@@ -74,11 +74,11 @@
     <text x="44" y="25" font-family="system-ui" font-size="13" font-weight="700" fill="#7A1318">100% Fresco</text>
   </g>
 
-  <!-- Floating Badge Entrega Rapida -->
+  <!-- Floating Badge Mejor Precio -->
   <g transform="translate(350, 110)">
     <rect x="0" y="0" width="145" height="42" rx="21" fill="#FFFFFF" filter="url(#shadow)"/>
     <circle cx="22" cy="21" r="14" fill="#D97706"/>
-    <text x="22" y="26" font-family="system-ui" font-size="14" text-anchor="middle" fill="#FFFFFF">⚡</text>
-    <text x="44" y="25" font-family="system-ui" font-size="13" font-weight="700" fill="#7A1318">Envíos en 2h</text>
+    <text x="22" y="26" font-family="system-ui" font-size="14" text-anchor="middle" fill="#FFFFFF">🏷️</text>
+    <text x="44" y="25" font-family="system-ui" font-size="13" font-weight="700" fill="#7A1318">Mejor Precio</text>
   </g>
 </svg>
