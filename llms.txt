@@ -1,32 +1,31 @@
 # Supermercado La Casona - Generative Engine Information (llms.txt)
 
-> Supermercado virtual colombiano especializado en productos frescos del campo, carnes seleccionadas, lácteos, panadería artesanal y despensa de la canasta familiar con precios transparentes en pesos colombianos (COP).
+> Supermercado convencional en Anorí, Antioquia, ofreciendo productos de consumo diario, abarrotes, carnes seleccionadas, frutas, verduras, lácteos, panadería, bebidas y aseo del hogar con precios justos en pesos colombianos (COP).
 
 ## Resumen de la Entidad
 - **Nombre comercial:** Supermercado La Casona
-- **Tipo de negocio:** Supermercado online / Comercio electrónico de alimentos y abasto familiar
-- **País:** Colombia (Sede principal en Bogotá D.C., cobertura regional)
+- **Tipo de negocio:** Supermercado convencional / Comercio de abasto familiar
+- **País:** Colombia (Sede principal en Parque Principal, Anorí, Antioquia)
 - **Moneda oficial:** Pesos colombianos (COP - $)
-- **Valores diferenciales:** Frescura 100% garantizada, compra directa a campesinos y productores colombianos sin intermediación innecesaria, alistamiento exprés en 15 minutos, pagos contra entrega y digitales.
+- **Valores diferenciales:** Todo lo que necesitas en un solo lugar, las mejores ofertas para tu hogar, productos frescos y de calidad todos los días, el supermercado de confianza para las familias de Anorí, comprometidos con nuestra comunidad Anoriseña.
 
 ## Secciones Principales
-- [Inicio y Promociones](https://supermercadolacasona.com.co/#hero): Ofertas del día y cosechas seleccionadas con hasta 20% de descuento.
-- [Catálogo de Productos](https://supermercadolacasona.com.co/#catalogo): Más de 22 productos de primera necesidad con origen geográfico verificado.
+- [Inicio y Promociones](https://supermercadolacasona.com.co/#hero): Ofertas del día y productos destacados para el hogar anoriseño.
+- [Catálogo de Productos](https://supermercadolacasona.com.co/#catalogo): Más de 22 productos de primera necesidad y consumo diario.
 - [Categorías](https://supermercadolacasona.com.co/#categorias): Frutas y verduras, Carnes y huevos, Lácteos, Panadería, Despensa, Bebidas, Aseo del hogar.
-- [Cómo Comprar](https://supermercadolacasona.com.co/#como-comprar): Proceso paso a paso para ordenar en línea sin registro obligatorio.
-- [Preguntas Frecuentes](https://supermercadolacasona.com.co/#faq): Respuestas verificadas sobre métodos de pago, envíos, tiempos de entrega y garantía.
-- [Origen Campesino y Trazabilidad](https://supermercadolacasona.com.co/#origen-campesino): Información geográfica de las regiones productoras (Boyacá, Cundinamarca, Antioquia, Tolima, Huila, Nariño, Santander).
+- [Cómo Comprar](https://supermercadolacasona.com.co/#como-comprar): Proceso paso a paso para ordenar en línea o alistar en tienda sin registro obligatorio.
+- [Preguntas Frecuentes](https://supermercadolacasona.com.co/#faq): Respuestas verificadas sobre métodos de pago, horarios y atención en Anorí.
+- [Compromiso con Anorí](https://supermercadolacasona.com.co/#compromiso-anori): Información sobre la sede en el Parque Principal y atención cercana a las familias del municipio.
 
 ## Métodos de Pago Aceptados
-- Efectivo contra entrega
+- Efectivo en caja o contra entrega
 - Datáfono inalámbrico (tarjetas débito y crédito Visa, Mastercard)
 - Billeteras digitales: Nequi y Daviplata
 - Transferencia bancaria (Bancolombia, PSE)
 
 ## Contacto y Atención Local
-- **Ubicación:** Carrera 7 # 71-21, Bogotá D.C., Colombia
-- **Teléfono:** (601) 789 0000
-- **WhatsApp:** +57 310 000 0000
-- **Horario:** Lunes a Domingo de 7:00 a.m. a 9:00 p.m.
+- **Ubicación:** Parque Principal, Anorí, Antioquia, Colombia
+- **WhatsApp y Teléfono:** +57 310 381 0674
+- **Horario:** Lunes a Domingo de 7:00 a. m. a 7:00 p. m.
 
 Para la versión completa con catálogo detallado y especificaciones técnicas para modelos de lenguaje, consultar: [llms-full.txt](https://supermercadolacasona.com.co/llms-full.txt).

@@ -35,7 +35,7 @@ const DEMO_USER = {
   id: "usr_demo_1",
   nombre: "Carlos Restrepo",
   email: "carlos.restrepo@correo.com",
-  telefono: "312 456 7890",
+  telefono: "310 381 0674",
   pedidos: [
     {
       codigo: "ORDEN #LC-2026-3819",
@@ -318,7 +318,7 @@ function renderProducts(productsToRender) {
         <div class="card-header-bar">
           <div class="card-badges">
             ${hasDiscount ? `<span class="badge-offer">${product.badge || `${discountPercent}% OFF`}</span>` : ''}
-            ${product.destacado && !hasDiscount ? `<span class="badge-status">⭐ Destacado</span>` : ''}
+            ${product.destacado && !hasDiscount ? `<span class="badge-status">Destacado</span>` : ''}
           </div>
           <button 
             type="button" 
@@ -326,7 +326,9 @@ function renderProducts(productsToRender) {
             data-fav-id="${product.id}"
             aria-label="${isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'} ${escapeHTML(product.nombre)}"
           >
-            ${isFav ? '❤️' : '🤍'}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
           </button>
         </div>
 
@@ -349,7 +351,7 @@ function renderProducts(productsToRender) {
             ${escapeHTML(product.nombre)}
           </h3>
           <p class="product-unit">${escapeHTML(product.presentacion)}</p>
-          ${product.origen ? `<p class="product-origin"><span>📍</span> ${escapeHTML(product.origen)}</p>` : ''}
+          ${product.origen ? `<p class="product-origin"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block; vertical-align:middle; margin-right:3px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>${escapeHTML(product.origen)}</p>` : ''}
 
           <!-- Precios en COP -->
           <div class="product-price-block">
@@ -372,7 +374,7 @@ function renderProducts(productsToRender) {
               aria-label="Agregar ${escapeHTML(product.nombre)} al carrito"
             >
               <span>Agregar</span>
-              <span aria-hidden="true">🛒</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
             </button>
           </div>
         </div>
@@ -563,9 +565,11 @@ function renderCart() {
   if (state.cart.length === 0) {
     listEl.innerHTML = `
       <div class="empty-state" style="padding: 40px 10px; border: none;">
-        <span class="empty-state-icon" aria-hidden="true">🛒</span>
+        <span class="empty-state-icon" aria-hidden="true">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+        </span>
         <h3 class="empty-state-title" style="font-size: 1.15rem;">Tu carrito está vacío</h3>
-        <p class="empty-state-text" style="font-size: 0.88rem;">Explora nuestros productos frescos y agrégalos a tu carrito.</p>
+        <p class="empty-state-text" style="font-size: 0.88rem;">Explora nuestros productos de supermercado y agrégalos a tu carrito.</p>
         <button type="button" class="btn btn-primary" onclick="app.closeCart(); location.href='#catalogo';">
           Empezar a comprar
         </button>
@@ -607,7 +611,7 @@ function renderCart() {
             aria-label="Eliminar ${escapeHTML(item.nombre)} del carrito"
             title="Eliminar artículo"
           >
-            🗑️
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
           </button>
         </div>
       </div>
@@ -666,7 +670,7 @@ function toggleFavorite(productId) {
   if (index === -1) {
     state.favorites.push(productId);
     isFav = true;
-    showToast(`Guardaste ${product.nombre} en favoritos ❤️`, "info");
+    showToast(`Guardaste ${product.nombre} en favoritos`, "info");
   } else {
     state.favorites.splice(index, 1);
     isFav = false;
@@ -716,9 +720,11 @@ function renderFavoritesModal() {
   if (favoriteProducts.length === 0) {
     container.innerHTML = `
       <div class="empty-state" style="padding: 30px 10px; border: none;">
-        <span class="empty-state-icon" aria-hidden="true">❤️</span>
+        <span class="empty-state-icon" aria-hidden="true">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        </span>
         <h3 class="empty-state-title" style="font-size: 1.15rem;">No tienes favoritos guardados</h3>
-        <p class="empty-state-text" style="font-size: 0.88rem;">Haz clic en el corazón de cualquier producto para guardarlo aquí y comprarlo fácilmente.</p>
+        <p class="empty-state-text" style="font-size: 0.88rem;">Haz clic en el icono de favorito de cualquier producto para guardarlo aquí y comprarlo fácilmente.</p>
         <button type="button" class="btn btn-primary" onclick="app.closeFavorites(); location.href='#catalogo';">
           Explorar productos
         </button>
@@ -1017,7 +1023,7 @@ function loginUser(userData) {
   saveUser();
   updateUserUI();
   closeLoginModal();
-  showToast(`¡Bienvenido, ${userData.nombre.split(" ")[0]}! 👋`, "success");
+  showToast(`¡Bienvenido, ${userData.nombre.split(" ")[0]}!`, "success");
 }
 
 /**
@@ -1175,7 +1181,9 @@ function renderProfileModal() {
   if (!state.user) {
     body.innerHTML = `
       <div class="empty-state" style="padding: 30px 10px; border: none;">
-        <span class="empty-state-icon" aria-hidden="true">👤</span>
+        <span class="empty-state-icon" aria-hidden="true">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </span>
         <h3 class="empty-state-title" style="font-size: 1.15rem;">No has iniciado sesión</h3>
         <p class="empty-state-text" style="font-size: 0.88rem;">Inicia sesión para consultar tus datos guardados y el historial de compras.</p>
         <button type="button" class="btn btn-primary" onclick="app.closeProfileModal(); app.openLoginModal('login');">
@@ -1202,7 +1210,7 @@ function renderProfileModal() {
         <div class="profile-info-block">
           <strong>${escapeHTML(state.user.nombre)}</strong>
           <span>${escapeHTML(state.user.email)}</span>
-          ${state.user.telefono ? `<span style="display: block; margin-top: 4px; font-size: 0.84rem; color: var(--color-text-muted);">📞 ${escapeHTML(state.user.telefono)}</span>` : ""}
+          ${state.user.telefono ? `<span style="display: block; margin-top: 4px; font-size: 0.84rem; color: var(--color-text-muted);">Tel: ${escapeHTML(state.user.telefono)}</span>` : ""}
         </div>
       </div>
 
@@ -1239,7 +1247,6 @@ function renderProfileModal() {
         </button>
         <button type="button" class="btn btn-primary" onclick="app.logoutUser();" style="background-color: var(--color-danger); border-color: var(--color-danger);">
           <span>Cerrar sesión</span>
-          <span aria-hidden="true">🚪</span>
         </button>
       </div>
     </div>
@@ -1492,24 +1499,29 @@ function bindEvents() {
   }
 
   // Mostrar / Ocultar contraseñas
+  const eyeOpenSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+  const eyeClosedSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
   if (toggleLoginPass) {
+    toggleLoginPass.innerHTML = eyeOpenSvg;
     toggleLoginPass.addEventListener("click", () => {
       const input = document.getElementById("login-password");
       if (input) {
         const isPass = input.type === "password";
         input.type = isPass ? "text" : "password";
-        toggleLoginPass.textContent = isPass ? "🙈" : "👁️";
+        toggleLoginPass.innerHTML = isPass ? eyeClosedSvg : eyeOpenSvg;
       }
     });
   }
 
   if (toggleRegPass) {
+    toggleRegPass.innerHTML = eyeOpenSvg;
     toggleRegPass.addEventListener("click", () => {
       const input = document.getElementById("reg-password");
       if (input) {
         const isPass = input.type === "password";
         input.type = isPass ? "text" : "password";
-        toggleRegPass.textContent = isPass ? "🙈" : "👁️";
+        toggleRegPass.innerHTML = isPass ? eyeClosedSvg : eyeOpenSvg;
       }
     });
   }

@@ -1,7 +1,7 @@
 {
   "short_name": "La Casona",
-  "name": "Supermercado La Casona - Mercado Campesino Online",
-  "description": "Supermercado virtual en Colombia con frutas y verduras campesinas, carnes de calidad, lácteos y despensa con precios justos en pesos colombianos.",
+  "name": "Supermercado La Casona - Anorí, Antioquia",
+  "description": "El supermercado de confianza para las familias de Anorí, Antioquia. Abarrotes, carnes frescas, frutas, verduras, lácteos y productos de aseo para tu hogar.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#FAF8F5",

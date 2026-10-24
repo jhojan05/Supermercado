@@ -12,8 +12,8 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://supermercadolacasona.com.co/" />
     <image:image>
       <image:loc>https://supermercadolacasona.com.co/assets/og-banner.jpg</image:loc>
-      <image:title>Supermercado La Casona - Mercado Campesino y Alimentos Frescos en Colombia</image:title>
-      <image:caption>Canasta de frutas, verduras, panadería artesanal y café especial de origen colombiano</image:caption>
+      <image:title>Supermercado La Casona - El Supermercado de Confianza en Anorí, Antioquia</image:title>
+      <image:caption>Abarrotes, carnes frescas, frutas, verduras y productos para el hogar en Anorí</image:caption>
     </image:image>
     <image:image>
       <image:loc>https://supermercadolacasona.com.co/assets/logo.svg</image:loc>
@@ -53,9 +53,9 @@
     <priority>0.8</priority>
   </url>
 
-  <!-- Sección Compromiso de Origen y Red Campesina (GEO) -->
+  <!-- Sección Compromiso con la Comunidad de Anorí (GEO) -->
   <url>
-    <loc>https://supermercadolacasona.com.co/#origen-campesino</loc>
+    <loc>https://supermercadolacasona.com.co/#compromiso-anori</loc>
     <lastmod>2026-10-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
