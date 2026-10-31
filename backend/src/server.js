@@ -16,6 +16,7 @@ const adminRoutes = require('./routes/admin.routes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const ROOT_DIR = path.resolve(__dirname, '../../');
+const FRONTEND_DIR = path.join(ROOT_DIR, 'frontend');
 
 // Middlewares globales
 app.use(cors());
@@ -57,14 +58,14 @@ app.get('/api/health', async (req, res) => {
 });
 
 // Servicio de la Consola Administrativa (/consola o /consola/)
-app.use('/consola', express.static(path.join(ROOT_DIR, 'consola'), { index: 'index.html' }));
+app.use('/consola', express.static(path.join(FRONTEND_DIR, 'consola'), { index: 'index.html' }));
 
 // Servicio de archivos estáticos del Frontend principal (raíz)
-app.use(express.static(ROOT_DIR));
+app.use(express.static(FRONTEND_DIR));
 
 // Fallback para SPA de la Consola Administrativa
 app.get('/consola/*', (req, res) => {
-  res.sendFile(path.join(ROOT_DIR, 'consola', 'index.html'));
+  res.sendFile(path.join(FRONTEND_DIR, 'consola', 'index.html'));
 });
 
 // Manejador global de errores 404 para la API

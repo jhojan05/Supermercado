@@ -26,6 +26,7 @@ if hasattr(sys.stdout, 'reconfigure'):
         pass
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 
 class Color:
     GREEN = '\033[92m'
@@ -55,18 +56,19 @@ def assert_test(name, condition, error_msg=""):
 def test_file_structure():
     print(f"\n{Color.BOLD}{Color.CYAN}--- 1. Pruebas de Estructura de Archivos ---{Color.RESET}")
     required_files = [
-        "index.html",
-        "css/styles.css",
-        "js/security.js",
-        "js/products.js",
-        "js/app.js",
-        "assets/logo.svg",
-        "assets/og-banner.jpg",
-        "manifest.json",
-        "robots.txt",
-        "sitemap.xml",
-        "llms.txt",
-        "llms-full.txt",
+        "frontend/index.html",
+        "frontend/consola/index.html",
+        "frontend/css/styles.css",
+        "frontend/js/security.js",
+        "frontend/js/products.js",
+        "frontend/js/app.js",
+        "frontend/assets/logo.svg",
+        "frontend/assets/og-banner.jpg",
+        "frontend/manifest.json",
+        "frontend/robots.txt",
+        "frontend/sitemap.xml",
+        "frontend/llms.txt",
+        "frontend/llms-full.txt",
         "tests/test-runner.html",
         "tests/tests.js"
     ]
@@ -77,7 +79,7 @@ def test_file_structure():
 
 def test_html_and_security_headers():
     print(f"\n{Color.BOLD}{Color.CYAN}--- 2. Pruebas de Metadatos y Seguridad HTTP (index.html) ---{Color.RESET}")
-    html_path = os.path.join(BASE_DIR, "index.html")
+    html_path = os.path.join(FRONTEND_DIR, "index.html")
     with open(html_path, "r", encoding="utf-8") as f:
         html = f.read()
 
@@ -119,7 +121,7 @@ def test_html_and_security_headers():
 
 def test_jsonld_schemas():
     print(f"\n{Color.BOLD}{Color.CYAN}--- 3. Pruebas de Esquemas Estructurados JSON-LD ---{Color.RESET}")
-    html_path = os.path.join(BASE_DIR, "index.html")
+    html_path = os.path.join(FRONTEND_DIR, "index.html")
     with open(html_path, "r", encoding="utf-8") as f:
         html = f.read()
 
@@ -145,7 +147,7 @@ def test_jsonld_schemas():
 
 def test_form_security_and_honeypots():
     print(f"\n{Color.BOLD}{Color.CYAN}--- 4. Pruebas de Seguridad en Formularios y Honeypots ---{Color.RESET}")
-    html_path = os.path.join(BASE_DIR, "index.html")
+    html_path = os.path.join(FRONTEND_DIR, "index.html")
     with open(html_path, "r", encoding="utf-8") as f:
         html = f.read()
 
@@ -157,14 +159,14 @@ def test_form_security_and_honeypots():
     assert_test("Formulario de checkout tiene novalidate para validación defensiva en JS", '<form id="checkout-form" novalidate' in html)
     assert_test("Longitud máxima (maxlength) delimitada en campos sensibles", 'maxlength="60"' in html and 'maxlength="15"' in html)
 
-    css_path = os.path.join(BASE_DIR, "css", "styles.css")
+    css_path = os.path.join(FRONTEND_DIR, "css", "styles.css")
     with open(css_path, "r", encoding="utf-8") as f:
         css = f.read()
     assert_test("Botón flotante de WhatsApp reubicado a la izquierda (left: 24px)", 'left: 24px;' in css and '.whatsapp-float-btn' in css)
 
 def test_data_integrity():
     print(f"\n{Color.BOLD}{Color.CYAN}--- 5. Pruebas de Integridad de Datos (js/products.js) ---{Color.RESET}")
-    prod_path = os.path.join(BASE_DIR, "js", "products.js")
+    prod_path = os.path.join(FRONTEND_DIR, "js", "products.js")
     with open(prod_path, "r", encoding="utf-8") as f:
         content = f.read()
 
@@ -188,13 +190,13 @@ def test_data_integrity():
 
 def test_sitemap_and_robots():
     print(f"\n{Color.BOLD}{Color.CYAN}--- 6. Pruebas de Rastreo (robots.txt y sitemap.xml) ---{Color.RESET}")
-    robots_path = os.path.join(BASE_DIR, "robots.txt")
+    robots_path = os.path.join(FRONTEND_DIR, "robots.txt")
     with open(robots_path, "r", encoding="utf-8") as f:
         robots = f.read()
     assert_test("robots.txt permite rastreo general (User-agent: *)", "User-agent: *" in robots and "Allow: /" in robots)
     assert_test("robots.txt apunta a Sitemap oficial", "Sitemap: https://supermercadolacasona.com.co/sitemap.xml" in robots)
 
-    sitemap_path = os.path.join(BASE_DIR, "sitemap.xml")
+    sitemap_path = os.path.join(FRONTEND_DIR, "sitemap.xml")
     with open(sitemap_path, "r", encoding="utf-8") as f:
         sitemap = f.read()
     assert_test("sitemap.xml tiene formato XML válido con urlset", "<urlset" in sitemap and "</urlset>" in sitemap)

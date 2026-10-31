@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "buildCommand": "echo 'Frontend static output ready'",
+  "outputDirectory": "frontend"
+}
+
