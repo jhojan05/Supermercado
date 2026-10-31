@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: casona_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-casona_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-casona_secret_2026}
+      POSTGRES_DB: ${DB_NAME:-supermercado_casona}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-casona_admin} -d ${DB_NAME:-supermercado_casona}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    name: casona_postgres_data

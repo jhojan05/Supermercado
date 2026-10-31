@@ -43,8 +43,30 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;')
-        .replace(/`/g, '&#x60;')
-        .replace(/\//g, '&#x2F;');
+        .replace(/`/g, '&#x60;');
+    },
+
+    /**
+     * Rate limiting de acciones en memoria (anti-spam / anti-fuerza bruta)
+     */
+    rateLimit: function (action, maxAttempts = 5, windowMs = 5000) {
+      const now = Date.now();
+      const record = rateLimitStore.get(action) || { count: 0, resetTime: now + windowMs };
+
+      if (now > record.resetTime) {
+        record.count = 1;
+        record.resetTime = now + windowMs;
+        rateLimitStore.set(action, record);
+        return true;
+      }
+
+      if (record.count >= maxAttempts) {
+        return false;
+      }
+
+      record.count++;
+      rateLimitStore.set(action, record);
+      return true;
     },
 
     /**
@@ -221,39 +243,94 @@
      * Evita que un atacante modifique precios en localStorage o inyecte IDs falsos.
      */
     sanitizeCart: function (rawCart, catalog) {
-      if (!Array.isArray(rawCart) || !Array.isArray(catalog)) return [];
+      if (!Array.isArray(rawCart)) return [];
+      const catalogArr = Array.isArray(catalog) ? catalog : [];
       
       const cleanCart = [];
       const catalogMap = new Map();
-      catalog.forEach(p => {
+      catalogArr.forEach(p => {
         if (p && typeof p.id === 'number') {
           catalogMap.set(p.id, p);
+        } else if (p && p.id) {
+          const numId = parseInt(p.id, 10);
+          if (!isNaN(numId)) catalogMap.set(numId, p);
         }
       });
 
       rawCart.forEach(item => {
         if (!item || typeof item !== 'object') return;
         const validId = parseInt(item.id, 10);
-        if (isNaN(validId) || !catalogMap.has(validId)) {
-          console.warn(`[Seguridad] Eliminado producto no autorizado o inexistente en el carrito: ID ${item.id}`);
-          return;
-        }
+        if (isNaN(validId)) return;
 
         const officialProduct = catalogMap.get(validId);
-        // Validar cantidad entre 1 y 99
-        let validQty = parseInt(item.cantidad, 10);
+        const category = (officialProduct && officialProduct.categoria) || item.categoria || '';
+        const isFruitVeg = category === 'Frutas y verduras';
+
+        // Extraer y validar cantidad entre 1 y 99 admitiendo quantity, cantidad y qty
+        const rawQty = (item.quantity !== undefined && item.quantity !== null)
+          ? item.quantity
+          : ((item.cantidad !== undefined && item.cantidad !== null) ? item.cantidad : item.qty);
+        let validQty = parseInt(rawQty, 10);
         if (isNaN(validQty) || validQty < 1) validQty = 1;
         if (validQty > 99) validQty = 99;
 
-        // Construir el artículo garantizando el precio y nombre oficial
+        // Determinar precio base numérico autoritativo por kilo
+        let basePrice = 0;
+        if (officialProduct && typeof officialProduct.precio === 'number' && !isNaN(officialProduct.precio)) {
+          basePrice = officialProduct.precio;
+        } else if (typeof item.precioBase === 'number' && !isNaN(item.precioBase)) {
+          basePrice = item.precioBase;
+        } else if (typeof item.precio === 'number' && !isNaN(item.precio)) {
+          basePrice = item.precio;
+        } else if (item.precio) {
+          const cleaned = String(item.precio).replace(/[^0-9]/g, '');
+          basePrice = parseInt(cleaned, 10) || 0;
+        }
+
+        // Si el catálogo oficial está cargado y el producto no existe en él, descartar
+        if (catalogMap.size > 0 && !officialProduct) {
+          console.warn(`[Seguridad] Eliminado producto inexistente en catálogo: ID ${item.id}`);
+          return;
+        }
+
+        // Determinar unidad y precio efectivo (1 libra = 500g = mitad de precio de kilo; 1 kilo = 1000g)
+        let chosenUnit = null;
+        let effectivePrice = basePrice;
+        let gramsPerUnit = null;
+        let presentationText = (officialProduct && officialProduct.presentacion) || item.presentacion || 'Unidad';
+
+        if (isFruitVeg) {
+          chosenUnit = (item.unidad === 'libra' || item.unit === 'libra') ? 'libra' : 'kilo';
+          if (chosenUnit === 'libra') {
+            effectivePrice = Math.round(basePrice / 2);
+            gramsPerUnit = 500;
+            presentationText = 'Libra (500 g)';
+          } else {
+            effectivePrice = basePrice;
+            gramsPerUnit = 1000;
+            presentationText = 'Kilo (1000 g)';
+          }
+        }
+
+        const cartItemId = item.cartItemId || (isFruitVeg ? `${validId}_${chosenUnit}` : String(validId));
+
+        // Construir artículo con ambas propiedades (quantity y cantidad) para 100% compatibilidad
         cleanCart.push({
-          id: officialProduct.id,
-          nombre: officialProduct.nombre,
-          presentacion: officialProduct.presentacion,
-          precio: officialProduct.precio, // PRECIO AUTORITATIVO, NO EL DE LOCALSTORAGE
-          precioAnterior: officialProduct.precioAnterior || null,
-          imagen: officialProduct.imagen,
-          cantidad: validQty
+          id: validId,
+          cartItemId: cartItemId,
+          nombre: (officialProduct && officialProduct.nombre) || item.nombre || 'Producto',
+          presentacion: presentationText,
+          precio: effectivePrice,
+          precioBase: basePrice,
+          precioAnterior: (officialProduct && officialProduct.precioAnterior) || item.precioAnterior || null,
+          imagen: (officialProduct && officialProduct.imagen) || item.imagen || 'assets/logo.svg',
+          categoria: category,
+          unidad: chosenUnit,
+          pesoGramos: gramsPerUnit,
+          totalGramos: gramsPerUnit ? (validQty * gramsPerUnit) : null,
+          quantity: validQty,
+          cantidad: validQty,
+          subtotal: effectivePrice * validQty
         });
       });
 

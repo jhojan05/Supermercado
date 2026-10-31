@@ -967,6 +967,57 @@ body {
   font-weight: 700;
 }
 
+/* Selector de Unidad para Frutas y Verduras (Libra / Kilo) */
+.unit-selector-wrapper {
+  margin: 8px 0 10px 0;
+  padding: 6px 8px;
+  background-color: var(--color-bg-warm, #F8FAFC);
+  border: 1px dashed var(--color-border, #CBD5E1);
+  border-radius: var(--radius-md, 8px);
+}
+
+.unit-selector-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-muted, #64748B);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 5px;
+}
+
+.unit-selector-pills {
+  display: flex;
+  gap: 6px;
+}
+
+.unit-pill-btn {
+  flex: 1;
+  padding: 5px 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: var(--radius-full, 9999px);
+  border: 1.5px solid var(--color-border, #E2E8F0);
+  background-color: #FFFFFF;
+  color: var(--color-text-main, #1E293B);
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.15s ease);
+  text-align: center;
+}
+
+.unit-pill-btn:hover {
+  border-color: var(--color-primary-light, #E11D48);
+  background-color: rgba(185, 28, 28, 0.04);
+  color: var(--color-primary, #B91C1C);
+}
+
+.unit-pill-btn.active {
+  background-color: var(--color-primary, #B91C1C);
+  border-color: var(--color-primary, #B91C1C);
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 6px rgba(185, 28, 28, 0.22);
+}
+
 /* Acciones de la tarjeta (Selector de cantidad + Botón Agregar) */
 .product-action-row {
   display: flex;
@@ -1267,49 +1318,72 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .cart-qty-control {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: space-between;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
   background-color: #FFFFFF;
-  height: 30px;
+  height: 32px;
+  padding: 0 4px;
+  box-sizing: border-box;
 }
 
 .cart-qty-btn {
   width: 24px;
-  height: 100%;
+  height: 24px;
   background: none;
   border: none;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
+  font-weight: 700;
   cursor: pointer;
   color: var(--color-text-main);
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+  user-select: none;
+  padding: 0;
+}
+
+.cart-qty-btn:hover {
+  background-color: #F1F5F9;
+  color: var(--color-primary);
 }
 
 .cart-qty-val {
-  width: 22px;
+  min-width: 24px;
+  padding: 0 4px;
   text-align: center;
-  font-size: 0.85rem;
-  font-weight: bold;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  user-select: none;
 }
 
 .cart-item-remove {
+  width: 32px;
+  height: 32px;
   background: none;
   border: none;
   color: #9CA3AF;
   cursor: pointer;
-  padding: 4px;
-  font-size: 1.1rem;
-  transition: color var(--transition-fast);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
 }
 
 .cart-item-remove:hover {
   color: var(--color-danger);
+  background-color: rgba(220, 38, 38, 0.08);
 }
 
 /* Pie del carrito con resumen y cálculos */
@@ -2830,8 +2904,9 @@ body {
 .whatsapp-float-btn {
   position: fixed;
   bottom: 24px;
-  right: 24px;
-  z-index: 9999;
+  left: 24px;
+  right: auto;
+  z-index: 190;
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -2892,7 +2967,8 @@ body {
 @media (max-width: 640px) {
   .whatsapp-float-btn {
     bottom: 20px;
-    right: 18px;
+    left: 18px;
+    right: auto;
     padding: 14px;
     border-radius: 50%;
   }

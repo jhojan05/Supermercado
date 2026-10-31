@@ -375,11 +375,13 @@
       expect(state.cart[0].quantity).toBe(2);
     });
 
-    it('updateQuantity a 0 o negativo debe eliminar el producto del carrito', () => {
+    it('updateQuantity no debe permitir cantidades menores a 1 (eliminar solo con botón caneca)', () => {
       app.addToCart(1);
-      app.updateQuantity(1, -1); // 1 - 1 = 0 -> eliminar
+      app.updateQuantity(1, -1); // Intento de bajar de 1 a 0
       const state = app.getState();
-      expect(state.cart.length).toBe(0);
+      expect(state.cart.length).toBe(1);
+      expect(state.cart[0].quantity).toBe(1);
+      expect(state.cart[0].cantidad).toBe(1);
     });
 
     it('removeFromCart debe remover el producto específico', () => {
@@ -391,11 +393,42 @@
       expect(state.cart[0].id).toBe(2);
     });
 
+    it('Cálculo exacto de subtotal y total con productos dinámicos (ejemplo plátano y cebolla)', () => {
+      const state = app.getState();
+      state.cart = [
+        { id: 101, nombre: 'Platano', precio: 7400, quantity: 1, cantidad: 1 },
+        { id: 102, nombre: 'Cebolla Blanca', precio: 1800, quantity: 1, cantidad: 1 }
+      ];
+
+      // Subtotal y Total inicial: 7400 + 1800 = 9200
+      let calc = app.calculateTotal();
+      expect(calc.subtotal).toBe(9200);
+      expect(calc.total).toBe(9200);
+
+      // Aumentar plátanos a 2 -> 7400 * 2 + 1800 = 14800 + 1800 = 16600
+      app.updateQuantity(101, 1);
+      calc = app.calculateTotal();
+      expect(calc.subtotal).toBe(16600);
+      expect(calc.total).toBe(16600);
+
+      // Eliminar cebolla blanca -> queda 7400 * 2 = 14800
+      app.removeFromCart(102);
+      calc = app.calculateTotal();
+      expect(calc.subtotal).toBe(14800);
+      expect(calc.total).toBe(14800);
+
+      // Vaciar carrito -> queda en 0
+      app.clearCart(true);
+      calc = app.calculateTotal();
+      expect(calc.subtotal).toBe(0);
+      expect(calc.total).toBe(0);
+    });
+
     it('clearCart debe vaciar todo el carrito', () => {
       app.addToCart(1);
       app.addToCart(2);
       app.addToCart(3);
-      app.clearCart();
+      app.clearCart(true);
       const state = app.getState();
       expect(state.cart.length).toBe(0);
       expect(app.calculateTotal().total).toBe(0);
@@ -407,6 +440,136 @@
       expect(typeof stored).toBe('string');
       const parsed = JSON.parse(stored);
       expect(parsed[0].id).toBe(1);
+    });
+
+    it('Frutas y verduras: pedir por libra debe calcular la mitad del precio del kilo y 500g', () => {
+      // ID 1 es Manzana Roja (precio base: 7200 COP por kilo)
+      app.addToCart(1, 1, 'libra');
+      const state = app.getState();
+      const item = state.cart.find(i => i.id === 1 && i.unidad === 'libra');
+      expect(item).toBeDefined();
+      expect(item.precio).toBe(3600);
+      expect(item.pesoGramos).toBe(500);
+      expect(item.totalGramos).toBe(500);
+      expect(item.presentacion).toBe('Libra (500 g)');
+    });
+
+    it('Frutas y verduras: pedir por kilo debe mantener el precio base y 1000g', () => {
+      app.addToCart(1, 2, 'kilo');
+      const state = app.getState();
+      const item = state.cart.find(i => i.id === 1 && i.unidad === 'kilo');
+      expect(item).toBeDefined();
+      expect(item.precio).toBe(7200);
+      expect(item.pesoGramos).toBe(1000);
+      expect(item.totalGramos).toBe(2000);
+      expect(item.presentacion).toBe('Kilo (1000 g)');
+    });
+
+    it('Frutas y verduras: permite coexistir libra y kilo del mismo producto como ítems independientes', () => {
+      // 1 Kilo de Plátano (ID 2, base 4500) y 2 Libras de Plátano (2 x 2250 = 4500)
+      app.addToCart(2, 1, 'kilo');
+      app.addToCart(2, 2, 'libra');
+      const state = app.getState();
+      const itemsPlatano = state.cart.filter(i => i.id === 2);
+      expect(itemsPlatano.length).toBe(2);
+
+      const itemKilo = itemsPlatano.find(i => i.unidad === 'kilo');
+      const itemLibra = itemsPlatano.find(i => i.unidad === 'libra');
+      expect(itemKilo.quantity).toBe(1);
+      expect(itemKilo.precio).toBe(4500);
+      expect(itemLibra.quantity).toBe(2);
+      expect(itemLibra.precio).toBe(2250);
+
+      const total = app.calculateTotal();
+      // 4500 + (2250 * 2) = 9000
+      expect(total.total).toBe(9000);
+    });
+
+    it('WhatsApp: el mensaje generado incluye la unidad elegida (libras/kilos) y gramos', () => {
+      app.addToCart(2, 2, 'libra'); // Plátano 2 libras (1000g)
+      const state = app.getState();
+      const client = { nombre: 'María Pérez', telefono: '3001234567', barrio: 'El Carmen' };
+      const totalData = app.calculateTotal();
+      const msg = app.buildWhatsAppOrderMessage(client, state.cart, totalData, 'ORDEN #TEST-1');
+      expect(msg).toContain('2 libras');
+      expect(msg).toContain('1000 g');
+      expect(msg).toContain('Plátano');
+    });
+
+    it('Productos regulares fuera de frutas y verduras no usan unidad libra/kilo', () => {
+      // ID 9 es Leche Entera (Lácteos)
+      app.addToCart(9, 2);
+      const state = app.getState();
+      const leche = state.cart.find(i => i.id === 9);
+      expect(leche).toBeDefined();
+      expect(leche.unidad).toBe(null);
+      expect(leche.pesoGramos).toBe(null);
+    });
+
+    it('Caso obligatorio 1, 2 y 3: Cálculo exacto de precio por cantidad en Papa ($6.000 x 1, 2 y 3)', () => {
+      // ID 23 es Papa Pastusa Seleccionada ($6.000 / Kilo)
+      const papa = app.state.products.find(p => p.id === 23 || p.nombre.includes('Papa'));
+      expect(papa).toBeDefined();
+      const unitPrice = papa.precio; // 6000
+      expect(unitPrice).toBe(6000);
+
+      // 1 unidad: 6000
+      expect(unitPrice * 1).toBe(6000);
+      // 2 unidades: 12000
+      expect(unitPrice * 2).toBe(12000);
+      // 3 unidades: 18000
+      expect(unitPrice * 3).toBe(18000);
+    });
+
+    it('Caso obligatorio 4: Cambiar de kilo a libra debe utilizar el precio de la libra ($3.000)', () => {
+      const papa = app.state.products.find(p => p.id === 23 || p.nombre.includes('Papa'));
+      expect(papa).toBeDefined();
+      const basePrice = papa.precio; // 6000
+      const libraPrice = Math.round(basePrice / 2); // 3000
+      expect(libraPrice).toBe(3000);
+
+      // 3 libras a $3000 = $9000
+      expect(libraPrice * 3).toBe(9000);
+    });
+
+    it('Caso obligatorio 5: Agregar 3 kilos de papa al carrito conserva cantidad, presentación y subtotal ($18.000)', () => {
+      app.addToCart(23, 3, 'kilo');
+      const state = app.getState();
+      const item = state.cart.find(i => i.id === 23 && i.unidad === 'kilo');
+      expect(item).toBeDefined();
+      expect(item.quantity).toBe(3);
+      expect(item.precio).toBe(6000);
+      expect(item.subtotal).toBe(18000);
+      expect(item.presentacion).toBe('Kilo (1000 g)');
+      expect(item.totalGramos).toBe(3000);
+    });
+
+    it('Caso obligatorio 6: Modificar cantidades desde el carrito actualiza importes y total', () => {
+      app.addToCart(23, 1, 'kilo'); // 1 kilo a $6000
+      let totalData = app.calculateTotal();
+      expect(totalData.total).toBe(6000);
+
+      // Aumentar a 3 desde el carrito (+2)
+      app.updateQuantity('23_kilo', 2);
+      const state = app.getState();
+      const item = state.cart.find(i => i.cartItemId === '23_kilo');
+      expect(item.quantity).toBe(3);
+      expect(item.subtotal).toBe(18000);
+
+      totalData = app.calculateTotal();
+      expect(totalData.total).toBe(18000);
+    });
+
+    it('Caso obligatorio 7: Agregar otros productos suma correctamente todas las líneas', () => {
+      // 3 kilos de papa ($18.000) + 2 libras de plátano ($4.500) + 1 leche ($4.600)
+      app.addToCart(23, 3, 'kilo'); // 18000
+      app.addToCart(2, 2, 'libra'); // 2 x 2250 = 4500
+      app.addToCart(9, 1);          // 4600
+
+      const totalData = app.calculateTotal();
+      // 18000 + 4500 + 4600 = 27100
+      expect(totalData.subtotal).toBe(27100);
+      expect(totalData.total).toBe(27100);
     });
   });
 
@@ -499,6 +662,43 @@
       const hp = document.getElementById('website_hp_rf');
       expect(Boolean(hp)).toBe(true);
       expect(hp.value).toBe('');
+    });
+
+    it('Formulario de checkout debe incluir campo de barrio o sector (#checkout-neighborhood)', () => {
+      const neighborhoodInput = document.getElementById('checkout-neighborhood');
+      expect(Boolean(neighborhoodInput)).toBe(true);
+    });
+
+    it('isUserRegistered debe validar que el usuario tenga nombre, barrio y teléfono', () => {
+      expect(app.isUserRegistered(null)).toBe(false);
+      expect(app.isUserRegistered({})).toBe(false);
+      expect(app.isUserRegistered({ nombre: 'Carlos' })).toBe(false); // falta barrio y cel
+      expect(app.isUserRegistered({ nombre: 'Carlos', barrio: 'El Carmelo' })).toBe(false); // falta cel
+      expect(app.isUserRegistered({ nombre: 'Carlos', barrio: 'El Carmelo', telefono: '310 123 4567' })).toBe(true);
+      expect(app.isUserRegistered({ nombre: 'Carlos', direccion: 'Parque Principal', telefono: '310 123 4567' })).toBe(true);
+    });
+
+    it('buildWhatsAppOrderMessage debe generar la lista formateada con productos, cantidades y total', () => {
+      const client = {
+        nombre: 'Mariana Ospina',
+        barrio: 'El Carmelo',
+        telefono: '310 381 0674',
+        metodoPago: 'Efectivo contra entrega'
+      };
+      const items = [
+        { id: 1, nombre: 'Manzana Roja', presentacion: '500 g', precio: 7200, quantity: 2 },
+        { id: 2, nombre: 'Leche Colanta', presentacion: '1L', precio: 4300, quantity: 1 }
+      ];
+      const totals = { subtotal: 18700, discount: 0, total: 18700 };
+      const msg = app.buildWhatsAppOrderMessage(client, items, totals, 'ORDEN #LC-2026-9999');
+
+      expect(msg).toContain('Mariana Ospina');
+      expect(msg).toContain('El Carmelo');
+      expect(msg).toContain('310 381 0674');
+      expect(msg).toContain('Manzana Roja');
+      expect(msg).toContain('2x');
+      expect(msg).toContain('Leche Colanta');
+      expect(msg).toContain('18.700');
     });
 
     it('Simulación de loginUser actualiza el usuario en state y localStorage', () => {

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <radialGradient id="potatoGrad" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#E5C287"/>
+      <stop offset="70%" stop-color="#C69852"/>
+      <stop offset="100%" stop-color="#9C7232"/>
+    </radialGradient>
+  </defs>
+  <path d="M22 45 C18 28, 38 18, 60 20 C78 22, 88 35, 85 55 C82 72, 68 85, 45 84 C28 83, 24 60, 22 45 Z" fill="url(#potatoGrad)" stroke="#8A6124" stroke-width="2.5"/>
+  <circle cx="38" cy="36" r="2.2" fill="#75501A" opacity="0.7"/>
+  <circle cx="56" cy="30" r="1.8" fill="#75501A" opacity="0.6"/>
+  <circle cx="68" cy="48" r="2.4" fill="#75501A" opacity="0.75"/>
+  <circle cx="48" cy="62" r="2" fill="#75501A" opacity="0.6"/>
+  <circle cx="34" cy="58" r="1.8" fill="#75501A" opacity="0.6"/>
+  <circle cx="72" cy="65" r="1.5" fill="#75501A" opacity="0.5"/>
+</svg>

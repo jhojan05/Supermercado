@@ -6,9 +6,35 @@
  * ==========================================================================
  */
 
+// Claves de persistencia en localStorage
+const STORAGE_KEYS = {
+  CART: "supermercado_casona_cart",
+  FAVORITES: "supermercado_casona_favorites",
+  USER: "supermercado_casona_user",
+  PRODUCTS: "supermercado_casona_products_catalog",
+  SETTINGS: "supermercado_casona_settings",
+  OLD_CART: "supermercado_verde_cart",
+  OLD_FAVORITES: "supermercado_verde_favorites",
+  OLD_USER: "supermercado_verde_user"
+};
+
+// Carga inicial segura del catálogo desde localStorage o PRODUCTS estático
+function getInitialProducts() {
+  try {
+    const cached = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {}
+  return typeof PRODUCTS !== "undefined" ? PRODUCTS : [];
+}
+
 // Estado global de la aplicación
 const state = {
-  products: typeof PRODUCTS !== "undefined" ? PRODUCTS : [],
+  products: getInitialProducts(),
   categories: typeof CATEGORIES !== "undefined" ? CATEGORIES : [],
   filteredProducts: [],
   cart: [],
@@ -20,22 +46,14 @@ const state = {
   sortBy: "featured"
 };
 
-// Claves de persistencia en localStorage
-const STORAGE_KEYS = {
-  CART: "supermercado_casona_cart",
-  FAVORITES: "supermercado_casona_favorites",
-  USER: "supermercado_casona_user",
-  OLD_CART: "supermercado_verde_cart",
-  OLD_FAVORITES: "supermercado_verde_favorites",
-  OLD_USER: "supermercado_verde_user"
-};
-
 // Usuario de demostración preconfigurado
 const DEMO_USER = {
   id: "usr_demo_1",
   nombre: "Carlos Restrepo",
   email: "carlos.restrepo@correo.com",
   telefono: "310 381 0674",
+  barrio: "Parque Principal, Anorí",
+  direccion: "Parque Principal, Anorí",
   pedidos: [
     {
       codigo: "ORDEN #LC-2026-3819",
@@ -70,6 +88,68 @@ function escapeHTML(str) {
 }
 
 /* ==========================================================================
+   SINCRONIZACIÓN DE AJUSTES GLOBALES DESDE LA CONSOLA ADMINISTRATIVA
+   ========================================================================== */
+function loadStoreSettings() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+
+    // 1. Horario en Hero
+    if (s.storeSchedule) {
+      const scheduleEl = document.querySelector('.schedule-pill span');
+      if (scheduleEl) scheduleEl.textContent = `Horario: ${s.storeSchedule}`;
+    }
+
+    // 2. Banner de Anuncios
+    if (s.storeBanner) {
+      const bannerBadge = document.querySelector('.hero-badge-tag');
+      if (bannerBadge) bannerBadge.textContent = s.storeBanner;
+    }
+
+    // 3. Teléfono de WhatsApp
+    if (s.storePhone) {
+      const cleanPhone = s.storePhone.replace(/[^0-9]/g, '');
+      const waPhone = cleanPhone.startsWith('57') ? cleanPhone : `57${cleanPhone}`;
+      document.querySelectorAll('a[href*="wa.me"]').forEach(link => {
+        const url = new URL(link.href);
+        const textParam = url.searchParams.get('text') || '';
+        link.href = `https://wa.me/${waPhone}?text=${encodeURIComponent(textParam)}`;
+      });
+    }
+  } catch (e) {
+    console.warn('[Casona Settings] No se pudieron aplicar ajustes en la tienda', e);
+  }
+}
+
+function initSettingsSync() {
+  if (typeof BroadcastChannel !== 'undefined') {
+    try {
+      const channel = new BroadcastChannel('casona_products_sync');
+      channel.onmessage = (event) => {
+        if (event.data && (event.data.type === 'SETTINGS_UPDATED' || event.data.type === 'PRODUCTS_UPDATED')) {
+          loadStoreSettings();
+          const p = getInitialProducts();
+          if (p && p.length > 0) {
+            state.products = p;
+            applyFiltersAndSort();
+          }
+        }
+      };
+    } catch (e) {}
+  }
+
+  window.addEventListener('storage', (e) => {
+    if (e.key === STORAGE_KEYS.SETTINGS) loadStoreSettings();
+    if (e.key === STORAGE_KEYS.PRODUCTS) {
+      state.products = getInitialProducts();
+      applyFiltersAndSort();
+    }
+  });
+}
+
+/* ==========================================================================
    1. INICIALIZACIÓN DE LA APLICACIÓN
    ========================================================================== */
 document.addEventListener("DOMContentLoaded", () => {
@@ -77,6 +157,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initApp() {
+  loadStoreSettings();
+  initSettingsSync();
   loadUser();
   loadFavorites();
   loadCart();
@@ -86,6 +168,48 @@ function initApp() {
   bindEvents();
   updateBadges();
   updateUserUI();
+  fetchProductsFromBackend();
+}
+
+/**
+ * Consulta catálogo dinámico desde el backend Node.js + PostgreSQL con respaldo multitransporte
+ */
+async function fetchProductsFromBackend() {
+  const endpoints = [];
+  if (window.location.protocol !== 'file:' && window.location.origin) {
+    endpoints.push(`${window.location.origin}/api/products`);
+  }
+  endpoints.push('/api/products');
+  endpoints.push('http://localhost:3000/api/products');
+  endpoints.push('http://127.0.0.1:3000/api/products');
+
+  const uniqueEndpoints = [...new Set(endpoints)];
+
+  for (const url of uniqueEndpoints) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch(url, {
+        signal: controller.signal,
+        headers: { 'Accept': 'application/json' }
+      });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data && data.success && Array.isArray(data.products) && data.products.length > 0) {
+        state.products = data.products;
+        try {
+          localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(data.products));
+        } catch (e) {}
+        applyFiltersAndSort();
+        console.log(`[Casona Backend] ${data.products.length} productos cargados desde ${url}`);
+        return;
+      }
+    } catch (err) {
+      // Continuar al siguiente endpoint disponible
+    }
+  }
 }
 
 /**
@@ -219,19 +343,20 @@ function applyFiltersAndSort() {
     result = result.filter(p => p.categoria === state.filterCategory);
   }
 
-  // 2. Filtro por búsqueda
+  // 2. Filtro por búsqueda con tolerancia a tildes colombianas (ej. plátano / platano)
   if (state.searchQuery) {
-    const q = state.searchQuery;
+    const normalize = str => String(str || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const q = normalize(state.searchQuery);
     result = result.filter(p => 
-      p.nombre.toLowerCase().includes(q) ||
-      p.categoria.toLowerCase().includes(q) ||
-      (p.origen && p.origen.toLowerCase().includes(q))
+      normalize(p.nombre).includes(q) ||
+      normalize(p.categoria).includes(q) ||
+      (p.origen && normalize(p.origen).includes(q))
     );
   }
 
   // 3. Filtro por ofertas
   if (state.onlyOffers) {
-    result = result.filter(p => p.precioAnterior && p.precioAnterior > p.precio);
+    result = result.filter(p => (p.precioAnterior && p.precioAnterior > p.precio) || (p.badge && p.badge.includes('OFF')) || p.destacado);
   }
 
   // 4. Ordenamiento
@@ -350,14 +475,42 @@ function renderProducts(productsToRender) {
           <h3 id="product-title-${product.id}" class="product-name" title="${escapeHTML(product.nombre)}">
             ${escapeHTML(product.nombre)}
           </h3>
-          <p class="product-unit">${escapeHTML(product.presentacion)}</p>
+          <p class="product-unit" id="product-unit-text-${product.id}">${escapeHTML(product.presentacion)}</p>
           ${product.origen ? `<p class="product-origin"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block; vertical-align:middle; margin-right:3px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>${escapeHTML(product.origen)}</p>` : ''}
+
+          <!-- Selector de Unidad Libra / Kilo para Frutas y verduras -->
+          ${product.categoria === "Frutas y verduras" ? `
+            <div class="unit-selector-wrapper" data-unit-wrapper="${product.id}">
+              <span class="unit-selector-label">Elige presentación:</span>
+              <div class="unit-selector-pills" role="radiogroup" aria-label="Unidad para ${escapeHTML(product.nombre)}">
+                <button type="button" 
+                  class="unit-pill-btn active" 
+                  data-unit-btn="${product.id}" 
+                  data-unit="kilo" 
+                  aria-checked="true"
+                  title="1 Kilo = 1000 gramos"
+                >
+                  Kilo (1000g)
+                </button>
+                <button type="button" 
+                  class="unit-pill-btn" 
+                  data-unit-btn="${product.id}" 
+                  data-unit="libra" 
+                  aria-checked="false"
+                  title="1 Libra = 500 gramos"
+                >
+                  Libra (500g)
+                </button>
+              </div>
+            </div>
+          ` : ''}
 
           <!-- Precios en COP -->
           <div class="product-price-block">
-            <span class="product-current-price">${formatCOP(product.precio)}</span>
-            ${hasDiscount ? `<span class="product-old-price">${formatCOP(product.precioAnterior)}</span>` : ''}
-            ${hasDiscount ? `<span class="product-savings">Ahorras ${formatCOP(savings)}</span>` : ''}
+            <span class="product-current-price" id="product-price-val-${product.id}">${formatCOP(product.precio)}</span>
+            <span class="product-unit-badge" id="product-unit-badge-${product.id}" style="font-size:0.8rem; color:var(--color-text-muted); font-weight:600;">${product.categoria === "Frutas y verduras" ? '/ Kilo' : (product.presentacion ? '• ' + escapeHTML(product.presentacion) : '')}</span>
+            <span class="product-old-price" id="product-oldprice-val-${product.id}" style="${hasDiscount ? '' : 'display:none;'}">${hasDiscount ? formatCOP(product.precioAnterior) : ''}</span>
+            <span class="product-savings" id="product-savings-val-${product.id}" style="${hasDiscount ? '' : 'display:none;'}">${hasDiscount ? `Ahorras ${formatCOP(savings)}` : ''}</span>
           </div>
 
           <!-- Acciones: selector de cantidad y botón agregar -->
@@ -386,6 +539,89 @@ function renderProducts(productsToRender) {
 }
 
 /**
+ * Actualiza en tiempo real el importe calculado en la tarjeta según la cantidad
+ * y la presentación seleccionada (Libra / Kilo o unidad estándar).
+ */
+function updateCardPriceDisplay(productId) {
+  const numId = parseInt(productId, 10);
+  const product = state.products.find(p => p.id === numId);
+  if (!product) return;
+
+  const card = document.querySelector(`.product-card[data-product-id="${numId}"]`);
+  const valEl = document.getElementById(`card-qty-${numId}`);
+  const quantity = Math.max(1, valEl ? (parseInt(valEl.textContent, 10) || 1) : 1);
+
+  const isFruitVeg = product.categoria === "Frutas y verduras";
+  const activeUnitBtn = card ? card.querySelector(`.unit-pill-btn.active[data-unit-btn="${numId}"]`) : null;
+  const unit = isFruitVeg ? (activeUnitBtn ? activeUnitBtn.getAttribute("data-unit") : "kilo") : null;
+
+  const basePrice = getItemNumericPrice(product);
+  const baseOldPrice = product.precioAnterior ? getItemNumericPrice({ precio: product.precioAnterior }) : null;
+
+  let unitPrice = basePrice;
+  let unitOldPrice = baseOldPrice;
+
+  if (isFruitVeg) {
+    if (unit === "libra") {
+      unitPrice = Math.round(basePrice / 2);
+      if (baseOldPrice) unitOldPrice = Math.round(baseOldPrice / 2);
+    } else {
+      unitPrice = basePrice;
+      unitOldPrice = baseOldPrice;
+    }
+  }
+
+  // Importe total para la cantidad seleccionada: precio unitario × cantidad
+  const lineSubtotal = unitPrice * quantity;
+
+  const priceValEl = document.getElementById(`product-price-val-${numId}`);
+  const unitBadgeEl = document.getElementById(`product-unit-badge-${numId}`);
+  const oldPriceValEl = document.getElementById(`product-oldprice-val-${numId}`);
+  const savingsValEl = document.getElementById(`product-savings-val-${numId}`);
+  const unitTextEl = document.getElementById(`product-unit-text-${numId}`);
+
+  if (priceValEl) {
+    priceValEl.textContent = formatCOP(lineSubtotal);
+  }
+
+  if (unitBadgeEl) {
+    if (isFruitVeg) {
+      if (quantity > 1) {
+        const unitAbbr = unit === "libra" ? "lb" : "kg";
+        unitBadgeEl.textContent = `(${quantity} × ${formatCOP(unitPrice)} / ${unitAbbr})`;
+      } else {
+        unitBadgeEl.textContent = `/ ${unit === "libra" ? "Libra (500g)" : "Kilo (1000g)"}`;
+      }
+    } else {
+      if (quantity > 1) {
+        unitBadgeEl.textContent = `(${quantity} × ${formatCOP(unitPrice)} c/u)`;
+      } else {
+        unitBadgeEl.textContent = product.presentacion ? `• ${product.presentacion}` : "";
+      }
+    }
+  }
+
+  if (unitTextEl && isFruitVeg) {
+    unitTextEl.textContent = unit === "libra" ? "Presentación: 1 Libra (500 g)" : (product.presentacion || "Presentación: 1 Kilo (1000 g)");
+  }
+
+  if (oldPriceValEl && unitOldPrice) {
+    oldPriceValEl.textContent = formatCOP(unitOldPrice * quantity);
+    oldPriceValEl.style.display = "";
+  }
+
+  if (savingsValEl && unitOldPrice) {
+    const totalSavings = (unitOldPrice - unitPrice) * quantity;
+    if (totalSavings > 0) {
+      savingsValEl.textContent = `Ahorras ${formatCOP(totalSavings)}`;
+      savingsValEl.style.display = "";
+    } else {
+      savingsValEl.style.display = "none";
+    }
+  }
+}
+
+/**
  * Asigna eventos a los elementos dinámicos de cada tarjeta
  */
 function bindProductCardEvents() {
@@ -401,36 +637,75 @@ function bindProductCardEvents() {
     });
   });
 
+  // Selector de unidad Libra / Kilo en Frutas y verduras con actualización en vivo de precio
+  grid.querySelectorAll(".unit-pill-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const prodId = parseInt(btn.getAttribute("data-unit-btn"), 10);
+      const card = btn.closest(".product-card");
+      if (!card) return;
+
+      // Actualizar botones de unidad
+      card.querySelectorAll(`[data-unit-btn="${prodId}"]`).forEach(b => {
+        const isActive = (b === btn);
+        b.classList.toggle("active", isActive);
+        b.setAttribute("aria-checked", isActive ? "true" : "false");
+      });
+
+      // Recalcular el importe según la nueva presentación y la cantidad actual
+      updateCardPriceDisplay(prodId);
+    });
+  });
+
   // Incremento / Decremento de cantidad en tarjeta
   grid.querySelectorAll("[data-card-qty-minus]").forEach(btn => {
     btn.addEventListener("click", () => {
-      const id = btn.getAttribute("data-card-qty-minus");
+      const id = parseInt(btn.getAttribute("data-card-qty-minus"), 10);
       const valEl = document.getElementById(`card-qty-${id}`);
       if (valEl) {
         let current = parseInt(valEl.textContent, 10) || 1;
-        if (current > 1) valEl.textContent = current - 1;
+        if (current > 1) {
+          valEl.textContent = current - 1;
+          updateCardPriceDisplay(id);
+        }
       }
     });
   });
 
   grid.querySelectorAll("[data-card-qty-plus]").forEach(btn => {
     btn.addEventListener("click", () => {
-      const id = btn.getAttribute("data-card-qty-plus");
+      const id = parseInt(btn.getAttribute("data-card-qty-plus"), 10);
       const valEl = document.getElementById(`card-qty-${id}`);
       if (valEl) {
         let current = parseInt(valEl.textContent, 10) || 1;
-        if (current < 99) valEl.textContent = current + 1;
+        if (current < 99) {
+          valEl.textContent = current + 1;
+          updateCardPriceDisplay(id);
+        }
       }
     });
   });
 
-  // Agregar al carrito
+  // Agregar al carrito con validación de unidad en Frutas y verduras
   grid.querySelectorAll("[data-add-id]").forEach(btn => {
     btn.addEventListener("click", () => {
       const id = parseInt(btn.getAttribute("data-add-id"), 10);
+      const product = state.products.find(p => p.id === id);
       const valEl = document.getElementById(`card-qty-${id}`);
       const quantity = valEl ? parseInt(valEl.textContent, 10) : 1;
-      addToCart(id, quantity);
+
+      let chosenUnit = null;
+      if (product && product.categoria === "Frutas y verduras") {
+        const card = btn.closest(".product-card");
+        const activeUnitBtn = card ? card.querySelector(`.unit-pill-btn.active[data-unit-btn="${id}"]`) : null;
+        if (!activeUnitBtn) {
+          showToast("Por favor selecciona si deseas tu pedido por Libra o por Kilo.", "warning");
+          return;
+        }
+        chosenUnit = activeUnitBtn.getAttribute("data-unit") || "kilo";
+      }
+
+      addToCart(id, quantity, chosenUnit);
 
       // Microanimación de confirmación
       btn.classList.add("added-feedback");
@@ -439,7 +714,10 @@ function bindProductCardEvents() {
       setTimeout(() => {
         btn.classList.remove("added-feedback");
         btn.innerHTML = originalText;
-        if (valEl) valEl.textContent = "1"; // Reset quantity counter
+        if (valEl) {
+          valEl.textContent = "1"; // Reset quantity counter
+          updateCardPriceDisplay(id); // Reset displayed price back to 1 unit
+        }
       }, 900);
     });
   });
@@ -450,47 +728,141 @@ function bindProductCardEvents() {
    ========================================================================== */
 
 /**
- * Agrega un producto al carrito o incrementa su cantidad
+ * Obtiene el precio numérico real de un producto/artículo, tolerando cadenas con formato "$ 7.400"
  */
-function addToCart(productId, quantity = 1) {
-  const product = state.products.find(p => p.id === productId);
+function getItemNumericPrice(item) {
+  if (!item) return 0;
+  if (typeof item.precio === 'number' && !isNaN(item.precio)) {
+    return item.precio;
+  }
+  if (typeof item.precio === 'string') {
+    const cleaned = item.precio.replace(/[^0-9]/g, '');
+    const parsed = parseInt(cleaned, 10);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  return 0;
+}
+
+/**
+ * Obtiene la cantidad numérica real de un artículo de forma segura (tolerando quantity, cantidad o qty)
+ * Garantiza un número entero >= 1 (nunca undefined ni NaN)
+ */
+function getItemNumericQuantity(item) {
+  if (!item) return 1;
+  const raw = (item.quantity !== undefined && item.quantity !== null)
+    ? item.quantity
+    : ((item.cantidad !== undefined && item.cantidad !== null) ? item.cantidad : item.qty);
+  const parsed = parseInt(raw, 10);
+  return (isNaN(parsed) || parsed < 1) ? 1 : Math.min(parsed, 99);
+}
+
+/**
+ * Agrega un producto al carrito o incrementa su cantidad
+ * Soporta selección de unidad (libra / kilo) para Frutas y verduras con cálculo exacto en gramos.
+ */
+function addToCart(productId, quantity = 1, unit = null) {
+  const numId = parseInt(productId, 10);
+  const product = state.products.find(p => p.id === numId);
   if (!product) return;
 
-  const existingItem = state.cart.find(item => item.id === productId);
+  const validQty = Math.max(1, parseInt(quantity, 10) || 1);
+  const isFruitVeg = product.categoria === "Frutas y verduras";
+  const chosenUnit = isFruitVeg ? ((unit === "libra" || unit === "kilo") ? unit : "kilo") : null;
+  const cartItemId = isFruitVeg ? `${product.id}_${chosenUnit}` : String(product.id);
+
+  // Buscar artículo existente en el carrito matching por cartItemId o id
+  const existingItem = state.cart.find(item => {
+    if (item.cartItemId) {
+      return item.cartItemId === cartItemId;
+    }
+    if (isFruitVeg) {
+      return item.id === product.id && (item.unidad === chosenUnit || (!item.unidad && chosenUnit === "kilo"));
+    }
+    return item.id === product.id;
+  });
+
+  const basePrice = getItemNumericPrice(product);
+  const effectivePrice = (isFruitVeg && chosenUnit === "libra") ? Math.round(basePrice / 2) : basePrice;
+  const gramsPerUnit = isFruitVeg ? (chosenUnit === "libra" ? 500 : 1000) : null;
 
   if (existingItem) {
-    existingItem.quantity += quantity;
+    const currentQty = getItemNumericQuantity(existingItem);
+    const newQty = Math.min(99, currentQty + validQty);
+    existingItem.quantity = newQty;
+    existingItem.cantidad = newQty;
+    existingItem.subtotal = existingItem.precio * newQty;
+    if (existingItem.pesoGramos) {
+      existingItem.totalGramos = newQty * existingItem.pesoGramos;
+    }
   } else {
     state.cart.push({
       id: product.id,
+      cartItemId: cartItemId,
       nombre: product.nombre,
-      precio: product.precio,
-      precioAnterior: product.precioAnterior,
-      presentacion: product.presentacion,
-      imagen: product.imagen,
-      categoria: product.categoria,
-      quantity: quantity
+      precio: effectivePrice,
+      precioBase: basePrice,
+      precioAnterior: product.precioAnterior || null,
+      presentacion: isFruitVeg ? (chosenUnit === "libra" ? "Libra (500 g)" : "Kilo (1000 g)") : (product.presentacion || "Unidad"),
+      imagen: product.imagen || "assets/logo.svg",
+      categoria: product.categoria || "",
+      unidad: chosenUnit,
+      pesoGramos: gramsPerUnit,
+      totalGramos: gramsPerUnit ? (validQty * gramsPerUnit) : null,
+      quantity: validQty,
+      cantidad: validQty,
+      subtotal: effectivePrice * validQty
     });
   }
 
   saveCart();
   renderCart();
   updateBadges();
-  showToast(`¡Agregaste ${quantity}x ${product.nombre} al carrito!`, "success");
+
+  let toastMsg = `¡Agregaste ${validQty}x ${product.nombre} al carrito!`;
+  if (isFruitVeg) {
+    const unitWord = chosenUnit === "libra" ? (validQty === 1 ? "libra" : "libras") : (validQty === 1 ? "kilo" : "kilos");
+    toastMsg = `¡Agregaste ${validQty} ${unitWord} de ${product.nombre} al carrito!`;
+  }
+  showToast(toastMsg, "success");
 }
 
 /**
  * Modifica la cantidad de un artículo existente en el carrito
+ * Regla: La cantidad nunca puede ser menor que 1. Si el cliente quiere quitar el producto, debe usar el botón de eliminar.
+ * Admite itemRef tanto numérico como cartItemId alfanumérico.
  */
-function updateQuantity(productId, delta) {
-  const itemIndex = state.cart.findIndex(item => item.id === productId);
+function updateQuantity(itemRef, delta) {
+  const itemIndex = state.cart.findIndex(item =>
+    item.cartItemId === String(itemRef) ||
+    item.id === Number(itemRef) ||
+    item.id === itemRef
+  );
   if (itemIndex === -1) return;
 
-  state.cart[itemIndex].quantity += delta;
+  const item = state.cart[itemIndex];
+  const currentQty = getItemNumericQuantity(item);
+  const deltaNum = parseInt(delta, 10) || 0;
+  const newQty = currentQty + deltaNum;
 
-  if (state.cart[itemIndex].quantity <= 0) {
-    removeFromCart(productId);
+  // Si se intenta bajar de 1, se mantiene en 1 (el botón de eliminar con icono de caneca se encarga de quitarlo)
+  if (newQty < 1) {
+    item.quantity = 1;
+    item.cantidad = 1;
+    item.subtotal = item.precio * 1;
+    if (item.pesoGramos) {
+      item.totalGramos = item.pesoGramos;
+    }
+    saveCart();
+    renderCart();
+    updateBadges();
     return;
+  }
+
+  item.quantity = Math.min(99, newQty);
+  item.cantidad = item.quantity;
+  item.subtotal = item.precio * item.quantity;
+  if (item.pesoGramos) {
+    item.totalGramos = item.quantity * item.pesoGramos;
   }
 
   saveCart();
@@ -500,26 +872,42 @@ function updateQuantity(productId, delta) {
 
 /**
  * Elimina completamente un artículo del carrito
+ * Admite itemRef numérico o cartItemId alfanumérico.
  */
-function removeFromCart(productId) {
-  const item = state.cart.find(i => i.id === productId);
-  state.cart = state.cart.filter(item => item.id !== productId);
+function removeFromCart(itemRef) {
+  const itemIndex = state.cart.findIndex(item =>
+    item.cartItemId === String(itemRef) ||
+    item.id === Number(itemRef) ||
+    item.id === itemRef
+  );
+  if (itemIndex === -1) return;
+
+  const [removedItem] = state.cart.splice(itemIndex, 1);
   saveCart();
   renderCart();
   updateBadges();
 
-  if (item) {
-    showToast(`Eliminaste ${item.nombre} del carrito`, "info");
+  if (removedItem) {
+    showToast(`Eliminaste ${removedItem.nombre} del carrito`, "info");
   }
 }
 
 /**
- * Vacía completamente el carrito
+ * Vacía completamente el carrito y limpia datos residuales
  */
-function clearCart() {
-  if (state.cart.length === 0) return;
-  if (confirm("¿Estás seguro de que deseas vaciar tu carrito de compras?")) {
+function clearCart(skipConfirm = false) {
+  if (!state.cart || state.cart.length === 0) {
+    renderCart();
+    updateBadges();
+    return;
+  }
+  const shouldClear = skipConfirm || (typeof confirm === 'function' ? confirm("¿Estás seguro de que deseas vaciar tu carrito de compras?") : true);
+  if (shouldClear) {
     state.cart = [];
+    try {
+      localStorage.removeItem(STORAGE_KEYS.CART);
+      localStorage.removeItem(STORAGE_KEYS.OLD_CART);
+    } catch (e) {}
     saveCart();
     renderCart();
     updateBadges();
@@ -528,10 +916,15 @@ function clearCart() {
 }
 
 /**
- * Calcula el subtotal del carrito
+ * Calcula el subtotal del carrito sumando (precio * cantidad) de cada producto
  */
 function calculateSubtotal() {
-  return state.cart.reduce((sum, item) => sum + (item.precio * item.quantity), 0);
+  if (!Array.isArray(state.cart) || state.cart.length === 0) return 0;
+  return state.cart.reduce((sum, item) => {
+    const price = getItemNumericPrice(item);
+    const qty = getItemNumericQuantity(item);
+    return sum + (price * qty);
+  }, 0);
 }
 
 /**
@@ -556,13 +949,16 @@ function renderCart() {
 
   if (!listEl) return;
 
-  const totalCount = state.cart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalCount = Array.isArray(state.cart)
+    ? state.cart.reduce((sum, item) => sum + getItemNumericQuantity(item), 0)
+    : 0;
+
   if (drawerCount) drawerCount.textContent = totalCount;
 
   const { subtotal, total } = calculateTotal();
 
   // Si el carrito está vacío
-  if (state.cart.length === 0) {
+  if (!Array.isArray(state.cart) || state.cart.length === 0) {
     listEl.innerHTML = `
       <div class="empty-state" style="padding: 40px 10px; border: none;">
         <span class="empty-state-icon" aria-hidden="true">
@@ -587,31 +983,52 @@ function renderCart() {
   if (checkoutBtn) checkoutBtn.disabled = false;
   if (clearBtn) clearBtn.style.display = "block";
 
-  // Renderizar artículos
+  // Renderizar artículos garantizando datos numéricos válidos
   listEl.innerHTML = state.cart.map(item => {
-    const itemSubtotal = item.precio * item.quantity;
+    const qty = getItemNumericQuantity(item);
+    const price = getItemNumericPrice(item);
+    const itemSubtotal = price * qty;
+    const itemKey = item.cartItemId || String(item.id);
+
+    let unitDisplay = `<p class="cart-item-unit">${escapeHTML(item.presentacion || "Unidad")}</p>`;
+    if (item.unidad) {
+      const unitLabel = item.unidad === "libra" ? (qty === 1 ? "libra" : "libras") : (qty === 1 ? "kilo" : "kilos");
+      const totalGrams = item.totalGramos || (qty * (item.pesoGramos || (item.unidad === "libra" ? 500 : 1000)));
+      const gramsFormatted = totalGrams.toLocaleString("es-CO");
+      const unitAbbr = item.unidad === "libra" ? "lb" : "kg";
+
+      unitDisplay = `
+        <p class="cart-item-unit" style="font-weight: 600; color: var(--color-primary, #059669); margin: 2px 0;">
+          ${qty} ${unitLabel} <span style="font-size: 0.78rem; font-weight: 500; opacity: 0.85; color: var(--color-text-muted);">(${gramsFormatted} g)</span> • ${formatCOP(price)}/${unitAbbr}
+        </p>
+      `;
+    }
+
     return `
-      <div class="cart-item" data-cart-id="${item.id}">
-        <img src="${escapeHTML(item.imagen)}" alt="${escapeHTML(item.nombre)}" class="cart-item-img">
+      <div class="cart-item" data-cart-id="${escapeHTML(itemKey)}">
+        <img src="${escapeHTML(item.imagen || 'assets/logo.svg')}" alt="${escapeHTML(item.nombre || 'Producto')}" class="cart-item-img">
         <div class="cart-item-info">
-          <h4 class="cart-item-title">${escapeHTML(item.nombre)}</h4>
-          <p class="cart-item-unit">${escapeHTML(item.presentacion)}</p>
-          <div class="cart-item-price">${formatCOP(item.precio)}</div>
+          <h4 class="cart-item-title">${escapeHTML(item.nombre || 'Producto')}</h4>
+          ${unitDisplay}
+          <div class="cart-item-price" style="display: flex; gap: 6px; align-items: baseline;">
+            <span style="font-weight: 700;">${formatCOP(itemSubtotal)}</span>
+            ${qty > 1 ? `<span style="font-size: 0.78rem; color: var(--color-text-muted); font-weight: 400;">(${formatCOP(price)} c/u)</span>` : ''}
+          </div>
         </div>
         <div class="cart-item-actions">
-          <div class="cart-qty-control" aria-label="Cantidad">
-            <button type="button" class="cart-qty-btn" onclick="app.updateQuantity(${item.id}, -1)" aria-label="Disminuir">-</button>
-            <span class="cart-qty-val">${item.quantity}</span>
-            <button type="button" class="cart-qty-btn" onclick="app.updateQuantity(${item.id}, 1)" aria-label="Aumentar">+</button>
+          <div class="cart-qty-control" aria-label="Cantidad para ${escapeHTML(item.nombre || 'producto')}">
+            <button type="button" class="cart-qty-btn" onclick="app.updateQuantity('${itemKey}', -1)" aria-label="Disminuir cantidad de ${escapeHTML(item.nombre || '')}">-</button>
+            <span class="cart-qty-val">${qty}</span>
+            <button type="button" class="cart-qty-btn" onclick="app.updateQuantity('${itemKey}', 1)" aria-label="Aumentar cantidad de ${escapeHTML(item.nombre || '')}">+</button>
           </div>
           <button 
             type="button" 
             class="cart-item-remove" 
-            onclick="app.removeFromCart(${item.id})"
-            aria-label="Eliminar ${escapeHTML(item.nombre)} del carrito"
+            onclick="app.removeFromCart('${itemKey}')"
+            aria-label="Eliminar ${escapeHTML(item.nombre || 'producto')} del carrito"
             title="Eliminar artículo"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
           </button>
         </div>
       </div>
@@ -634,7 +1051,7 @@ function saveCart() {
 }
 
 /**
- * Recupera el carrito guardado en localStorage
+ * Recupera el carrito guardado en localStorage y normaliza registros antiguos o incompletos
  */
 function loadCart() {
   try {
@@ -644,11 +1061,34 @@ function loadCart() {
       const parsed = (typeof Security !== 'undefined')
         ? Security.safeJSONParse(raw, [])
         : JSON.parse(raw);
-      state.cart = (typeof Security !== 'undefined')
-        ? Security.sanitizeCart(parsed, typeof PRODUCTS !== 'undefined' ? PRODUCTS : [])
+      const activeCatalog = (state.products && state.products.length > 0)
+        ? state.products
+        : (typeof PRODUCTS !== 'undefined' ? PRODUCTS : []);
+      const sanitized = (typeof Security !== 'undefined')
+        ? Security.sanitizeCart(parsed, activeCatalog)
         : parsed;
+
+      // Normalización defensiva de registros antiguos
+      state.cart = (Array.isArray(sanitized) ? sanitized : []).map(item => {
+        const qty = getItemNumericQuantity(item);
+        const price = getItemNumericPrice(item);
+        const pesoGramos = item.pesoGramos || (item.unidad === 'libra' ? 500 : (item.unidad === 'kilo' ? 1000 : null));
+        return {
+          ...item,
+          cartItemId: item.cartItemId || (item.unidad ? `${item.id}_${item.unidad}` : String(item.id)),
+          precio: price,
+          quantity: qty,
+          cantidad: qty,
+          subtotal: price * qty,
+          pesoGramos: pesoGramos,
+          totalGramos: pesoGramos ? (qty * pesoGramos) : null
+        };
+      });
+    } else {
+      state.cart = [];
     }
   } catch (e) {
+    console.warn("Error al cargar carrito desde localStorage", e);
     state.cart = [];
   }
 }
@@ -774,17 +1214,25 @@ function renderFavoritesModal() {
 function updateBadges() {
   const cartBadge = document.getElementById("cart-badge-count");
   const favBadge = document.getElementById("fav-badge-count");
+  const drawerCount = document.getElementById("drawer-item-count");
 
-  const totalCartItems = state.cart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalCartItems = Array.isArray(state.cart)
+    ? state.cart.reduce((sum, item) => sum + getItemNumericQuantity(item), 0)
+    : 0;
 
   if (cartBadge) {
     cartBadge.textContent = totalCartItems;
     cartBadge.style.display = totalCartItems > 0 ? "inline-flex" : "none";
   }
 
+  if (drawerCount) {
+    drawerCount.textContent = totalCartItems;
+  }
+
   if (favBadge) {
-    favBadge.textContent = state.favorites.length;
-    favBadge.style.display = state.favorites.length > 0 ? "inline-flex" : "none";
+    const totalFavs = Array.isArray(state.favorites) ? state.favorites.length : 0;
+    favBadge.textContent = totalFavs;
+    favBadge.style.display = totalFavs > 0 ? "inline-flex" : "none";
   }
 }
 
@@ -845,7 +1293,205 @@ function closeFavorites() {
 }
 
 /**
- * Abre el modal de checkout simulado
+ * Determina si un usuario se encuentra registrado con sus datos completos
+ * (Nombre, Barrio y Número de Celular)
+ */
+function isUserRegistered(user) {
+  if (!user) return false;
+  const hasName = Boolean(user.nombre && typeof user.nombre === 'string' && user.nombre.trim().length >= 2);
+  const hasNeighborhood = Boolean(
+    (user.barrio && typeof user.barrio === 'string' && user.barrio.trim().length >= 2) ||
+    (user.direccion && typeof user.direccion === 'string' && user.direccion.trim().length >= 2)
+  );
+  const hasPhone = Boolean(user.telefono && typeof user.telefono === 'string' && user.telefono.trim().length >= 7);
+  return hasName && hasNeighborhood && hasPhone;
+}
+
+/**
+ * Obtiene el número oficial de WhatsApp del supermercado (dinámico de ajustes o por defecto)
+ */
+function getStoreWhatsAppNumber() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+    if (raw) {
+      const s = JSON.parse(raw);
+      if (s.storePhone) {
+        const clean = s.storePhone.replace(/[^0-9]/g, '');
+        return clean.startsWith('57') ? clean : `57${clean}`;
+      }
+    }
+  } catch (e) {}
+  return '573103810674';
+}
+
+/**
+ * Genera el mensaje formateado del pedido para WhatsApp
+ */
+function buildWhatsAppOrderMessage(clientData, cartItems, totalData, orderCode) {
+  const lines = [];
+  lines.push('🛒 *NUEVO PEDIDO - SUPERMERCADO LA CASONA*');
+  lines.push('----------------------------------------');
+  lines.push(`🔖 *Orden:* ${orderCode}`);
+  lines.push(`👤 *Cliente:* ${clientData.nombre}`);
+  lines.push(`📍 *Barrio / Sector:* ${clientData.barrio || clientData.direccion || 'Casco Urbano Anorí'}`);
+  lines.push(`📱 *Celular:* ${clientData.telefono}`);
+  if (clientData.metodoPago) {
+    lines.push(`💳 *Forma de pago:* ${clientData.metodoPago}`);
+  }
+  lines.push('----------------------------------------');
+  lines.push('📋 *LISTA DE PRODUCTOS:*');
+
+  cartItems.forEach((item, idx) => {
+    const qty = getItemNumericQuantity(item);
+    const price = getItemNumericPrice(item);
+    const subtotal = price * qty;
+
+    if (item.unidad) {
+      const unitLabel = item.unidad === 'libra' ? (qty === 1 ? 'libra' : 'libras') : (qty === 1 ? 'kilo' : 'kilos');
+      const totalGrams = item.totalGramos || (qty * (item.pesoGramos || (item.unidad === 'libra' ? 500 : 1000)));
+      lines.push(`${idx + 1}. ${item.nombre} — ${qty} ${unitLabel} (${totalGrams} g) — ${formatCOP(subtotal)}`);
+    } else {
+      const presentacion = item.presentacion ? ` (${item.presentacion})` : '';
+      lines.push(`${idx + 1}. ${qty}x ${item.nombre}${presentacion} — ${formatCOP(subtotal)}`);
+    }
+  });
+
+  lines.push('----------------------------------------');
+  if (totalData.discount && totalData.discount > 0) {
+    lines.push(`🏷️ *Subtotal:* ${formatCOP(totalData.subtotal)}`);
+    lines.push(`🎉 *Descuento aplicado:* -${formatCOP(totalData.discount)}`);
+  }
+  lines.push(`💰 *TOTAL A PAGAR:* ${formatCOP(totalData.total)} COP`);
+  lines.push('----------------------------------------');
+
+  if (clientData.notas && clientData.notas.trim()) {
+    lines.push(`📝 *Notas especiales:* ${clientData.notas.trim()}`);
+    lines.push('----------------------------------------');
+  }
+
+  lines.push('¡Hola! Deseo confirmar este pedido para entrega en Anorí. Quedo atento/a. Gracias.');
+  return lines.join('\n');
+}
+
+/**
+ * Despacha el pedido a WhatsApp, registra en backend e historial, y actualiza interfaz
+ */
+function dispatchOrderToWhatsApp(clientData) {
+  const cartItems = [...state.cart];
+  if (cartItems.length === 0) return;
+
+  const totalData = calculateTotal();
+  const randomOrderNum = Math.floor(1000 + Math.random() * 9000);
+  const orderCode = `ORDEN #LC-2026-${randomOrderNum}`;
+
+  const messageText = buildWhatsAppOrderMessage(clientData, cartItems, totalData, orderCode);
+  const waNumber = getStoreWhatsAppNumber();
+  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(messageText)}`;
+
+  // Actualizar pantalla de éxito del modal
+  const modal = document.getElementById('checkout-modal');
+  const formContainer = document.getElementById('checkout-form-container');
+  const successContainer = document.getElementById('checkout-success-container');
+  const orderCodeDisplay = document.getElementById('order-code-display');
+  const summaryDetails = document.getElementById('order-summary-details');
+  const reopenWaLink = document.getElementById('reopen-whatsapp-link');
+
+  if (orderCodeDisplay) orderCodeDisplay.textContent = orderCode;
+  if (summaryDetails) {
+    summaryDetails.textContent = `A nombre de ${clientData.nombre} • Barrio: ${clientData.barrio || 'Anorí'} • Cel: ${clientData.telefono}. Tu pedido ha sido enviado al WhatsApp de La Casona.`;
+  }
+  if (reopenWaLink) {
+    reopenWaLink.href = waUrl;
+  }
+
+  if (formContainer) formContainer.style.display = 'none';
+  if (successContainer) successContainer.style.display = 'block';
+
+  // Registrar en historial del usuario si aplica
+  if (state.user) {
+    if (!state.user.pedidos) state.user.pedidos = [];
+    state.user.pedidos.unshift({
+      codigo: orderCode,
+      fecha: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }),
+      total: totalData.total,
+      estado: 'Confirmado WhatsApp',
+      items: cartItems.map(i => {
+        const qty = getItemNumericQuantity(i);
+        if (i.unidad) {
+          const unitWord = i.unidad === 'libra' ? (qty === 1 ? 'libra' : 'libras') : (qty === 1 ? 'kilo' : 'kilos');
+          return `${i.nombre} (${qty} ${unitWord})`;
+        }
+        return `${i.nombre} x${qty}`;
+      }).join(', ')
+    });
+    saveUser();
+  }
+
+  // Notificar al backend local/Node.js si está activo
+  try {
+    fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nombre: clientData.nombre,
+        telefono: clientData.telefono,
+        direccion: clientData.barrio || clientData.direccion || 'Anorí',
+        notas: clientData.notas || '',
+        metodoPago: clientData.metodoPago || 'Efectivo contra entrega',
+        items: cartItems.map(i => {
+          const qty = getItemNumericQuantity(i);
+          const price = getItemNumericPrice(i);
+          return {
+            id: i.id,
+            nombre: i.nombre,
+            cantidad: qty,
+            unidad: i.unidad || 'unidad',
+            peso_gramos: i.totalGramos || (i.pesoGramos ? qty * i.pesoGramos : null),
+            precio_unitario: price,
+            subtotal: price * qty
+          };
+        })
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.success && data.order && orderCodeDisplay) {
+        orderCodeDisplay.textContent = data.order.codigo;
+      }
+    })
+    .catch(err => console.log('[Modo Offline / Local]', err));
+  } catch (err) {}
+
+  // Abrir WhatsApp con el pedido prellenado
+  try {
+    const waWindow = window.open(waUrl, '_blank', 'noopener,noreferrer');
+    if (!waWindow) {
+      window.location.href = waUrl;
+    }
+  } catch (e) {
+    window.location.href = waUrl;
+  }
+
+  // Vaciar carrito tras generación exitosa
+  state.cart = [];
+  saveCart();
+  renderCart();
+  updateBadges();
+
+  // Mostrar modal de confirmación
+  if (modal) {
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  showToast('¡Pedido generado! Abriendo WhatsApp del supermercado...', 'success');
+}
+
+/**
+ * Al hacer clic en "Comprar":
+ * - Si el cliente ya está registrado, envía directamente a WhatsApp sin pedir datos de nuevo.
+ * - Si no está registrado, abre el formulario para pedir: Nombre, Barrio y Celular.
  */
 function openCheckout() {
   if (state.cart.length === 0) {
@@ -855,6 +1501,21 @@ function openCheckout() {
 
   closeCart();
 
+  // Si el cliente ya está registrado (nombre, barrio y celular presentes)
+  if (isUserRegistered(state.user)) {
+    const userBarrio = state.user.barrio || state.user.direccion || 'Casco Urbano Anorí';
+    dispatchOrderToWhatsApp({
+      nombre: state.user.nombre,
+      barrio: userBarrio,
+      direccion: userBarrio,
+      telefono: state.user.telefono,
+      metodoPago: 'Efectivo contra entrega',
+      notas: ''
+    });
+    return;
+  }
+
+  // Si no está registrado, solicitar Nombre, Barrio y Celular en el modal
   const modal = document.getElementById("checkout-modal");
   const formContainer = document.getElementById("checkout-form-container");
   const successContainer = document.getElementById("checkout-success-container");
@@ -863,11 +1524,14 @@ function openCheckout() {
   const { total } = calculateTotal();
   if (modalTotal) modalTotal.textContent = formatCOP(total);
 
-  // Autocompletar datos del usuario si ha iniciado sesión
+  // Prellenar campos si existen datos parciales
+  const nameInput = document.getElementById("checkout-name");
+  const neighborhoodInput = document.getElementById("checkout-neighborhood");
+  const phoneInput = document.getElementById("checkout-phone");
+
   if (state.user) {
-    const nameInput = document.getElementById("checkout-name");
-    const phoneInput = document.getElementById("checkout-phone");
     if (nameInput) nameInput.value = state.user.nombre || "";
+    if (neighborhoodInput) neighborhoodInput.value = state.user.barrio || state.user.direccion || "";
     if (phoneInput) phoneInput.value = state.user.telefono || "";
   }
 
@@ -905,78 +1569,93 @@ function handleCheckoutSubmit(e) {
     return;
   }
 
-  // --- RATE LIMITING: prevenir envíos repetitivos (máx 3 en 60 s) ---
-  if (typeof Security !== 'undefined' && !Security.rateLimit('checkout', 3, 60000)) {
+  // --- RATE LIMITING: prevenir envíos repetitivos (máx 5 en 60 s) ---
+  if (typeof Security !== 'undefined' && !Security.rateLimit('checkout', 5, 60000)) {
     showToast('Demasiados intentos. Por favor espera un momento antes de reintentar.', 'error');
     return;
   }
 
-  const nameInput   = document.getElementById('checkout-name');
-  const phoneInput  = document.getElementById('checkout-phone');
+  const nameInput = document.getElementById('checkout-name');
+  const neighborhoodInput = document.getElementById('checkout-neighborhood');
+  const phoneInput = document.getElementById('checkout-phone');
   const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
-  const notesInput  = document.getElementById('checkout-notes');
+  const notesInput = document.getElementById('checkout-notes');
 
   // --- VALIDACIÓN Y SANITIZACIÓN DE INPUTS ---
-  const rawName  = nameInput  ? nameInput.value.trim()  : '';
+  const rawName = nameInput ? nameInput.value.trim() : '';
+  const rawNeighborhood = neighborhoodInput ? neighborhoodInput.value.trim() : '';
   const rawPhone = phoneInput ? phoneInput.value.trim() : '';
   const rawNotes = notesInput ? notesInput.value.trim() : '';
 
   if (typeof Security !== 'undefined') {
     const nameValidation = Security.validateName(rawName);
     if (!nameValidation.valid) {
-      showToast('Nombre inválido: ' + nameValidation.reason, 'error');
+      showToast('Nombre inválido: ' + (nameValidation.error || nameValidation.reason), 'error');
       if (nameInput) nameInput.focus();
       return;
     }
+    if (!rawNeighborhood || rawNeighborhood.length < 2) {
+      showToast('Por favor ingresa tu barrio o sector en Anorí.', 'error');
+      if (neighborhoodInput) neighborhoodInput.focus();
+      return;
+    }
     if (rawPhone && !Security.validatePhone(rawPhone).valid) {
-      showToast('Teléfono inválido. Ingresa un número celular colombiano válido.', 'error');
+      showToast('Teléfono celular inválido. Ingresa un número colombiano de 10 dígitos.', 'error');
+      if (phoneInput) phoneInput.focus();
+      return;
+    }
+  } else {
+    if (!rawName || rawName.length < 2) {
+      showToast('Por favor ingresa tu nombre completo.', 'error');
+      if (nameInput) nameInput.focus();
+      return;
+    }
+    if (!rawNeighborhood || rawNeighborhood.length < 2) {
+      showToast('Por favor ingresa tu barrio o sector en Anorí.', 'error');
+      if (neighborhoodInput) neighborhoodInput.focus();
+      return;
+    }
+    if (!rawPhone || rawPhone.length < 7) {
+      showToast('Por favor ingresa un número de celular válido.', 'error');
       if (phoneInput) phoneInput.focus();
       return;
     }
   }
 
-  const clientName  = typeof Security !== 'undefined' ? Security.escapeHTML(rawName || 'Cliente') : (rawName || 'Cliente');
+  const clientName = typeof Security !== 'undefined' ? Security.escapeHTML(rawName || 'Cliente') : (rawName || 'Cliente');
+  const clientNeighborhood = typeof Security !== 'undefined' ? Security.escapeHTML(rawNeighborhood || 'Anorí') : (rawNeighborhood || 'Anorí');
   const clientPhone = typeof Security !== 'undefined' ? Security.escapeHTML(rawPhone) : rawPhone;
-  const paymentText = paymentMethod ? Security && Security.escapeHTML(paymentMethod.value) || paymentMethod.value : 'Efectivo en caja';
+  const paymentText = paymentMethod ? (typeof Security !== 'undefined' ? Security.escapeHTML(paymentMethod.value) : paymentMethod.value) : 'Efectivo contra entrega';
 
-  const formContainer    = document.getElementById('checkout-form-container');
-  const successContainer = document.getElementById('checkout-success-container');
-  const orderCodeDisplay = document.getElementById('order-code-display');
-  const summaryDetails   = document.getElementById('order-summary-details');
-
-  const randomOrderNum = Math.floor(1000 + Math.random() * 9000);
-  const orderCode = `ORDEN #LC-2026-${randomOrderNum}`;
-
-  const { total } = calculateTotal();
-
-  if (orderCodeDisplay) orderCodeDisplay.textContent = orderCode;
-  if (summaryDetails) {
-    summaryDetails.textContent = `A nombre de ${clientName}${clientPhone ? ' • Tel: ' + clientPhone : ''} • Forma de pago: ${paymentText}. Tu pedido ha sido preparado en nuestro sistema.`;
+  // Guardar en state.user y localStorage para que en futuras compras quede registrado
+  if (!state.user) {
+    state.user = {
+      id: 'usr_' + Date.now(),
+      nombre: clientName,
+      barrio: clientNeighborhood,
+      direccion: clientNeighborhood,
+      telefono: clientPhone,
+      email: '',
+      pedidos: []
+    };
+  } else {
+    state.user.nombre = clientName;
+    state.user.barrio = clientNeighborhood;
+    state.user.direccion = clientNeighborhood;
+    state.user.telefono = clientPhone;
   }
+  saveUser();
+  updateUserUI();
 
-  if (formContainer)    formContainer.style.display    = 'none';
-  if (successContainer) successContainer.style.display = 'block';
-
-  // Si hay usuario autenticado, guardar en su historial de pedidos
-  if (state.user) {
-    if (!state.user.pedidos) state.user.pedidos = [];
-    state.user.pedidos.unshift({
-      codigo: orderCode,
-      fecha: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }),
-      total: total,
-      estado: 'Confirmado',
-      items: state.cart.map(i => `${i.nombre} x${i.quantity}`).join(', ')
-    });
-    saveUser();
-  }
-
-  // Vaciar carrito tras simulación exitosa
-  state.cart = [];
-  saveCart();
-  renderCart();
-  updateBadges();
-
-  showToast('¡Pedido confirmado con éxito!', 'success');
+  // Despachar pedido con la lista completa a WhatsApp
+  dispatchOrderToWhatsApp({
+    nombre: clientName,
+    barrio: clientNeighborhood,
+    direccion: clientNeighborhood,
+    telefono: clientPhone,
+    metodoPago: paymentText,
+    notas: rawNotes
+  });
 }
 
 /* ==========================================================================
@@ -1633,6 +2312,42 @@ function bindEvents() {
     });
   });
 
+  // Sincronización en tiempo real de productos desde la Consola Administrativa
+  window.addEventListener("storage", (e) => {
+    if (e.key === STORAGE_KEYS.PRODUCTS && e.newValue) {
+      try {
+        const updated = JSON.parse(e.newValue);
+        if (Array.isArray(updated) && updated.length > 0) {
+          state.products = updated;
+          applyFiltersAndSort();
+          console.log("[Casona Sync] Catálogo de productos actualizado en tiempo real.");
+        }
+      } catch (err) {}
+    }
+  });
+
+  if (typeof BroadcastChannel !== "undefined") {
+    try {
+      const syncChannel = new BroadcastChannel("casona_products_sync");
+      syncChannel.onmessage = (event) => {
+        if (event.data && event.data.type === "PRODUCTS_UPDATED") {
+          const cached = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
+          if (cached) {
+            try {
+              const updated = JSON.parse(cached);
+              if (Array.isArray(updated) && updated.length > 0) {
+                state.products = updated;
+                applyFiltersAndSort();
+                console.log("[Casona Sync] Catálogo actualizado vía BroadcastChannel.");
+              }
+            } catch (err) {}
+          }
+          fetchProductsFromBackend();
+        }
+      };
+    } catch (err) {}
+  }
+
   // Accesibilidad: Tecla Escape para cerrar modales y cajón
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
@@ -1695,6 +2410,13 @@ window.app = {
   closeProfileModal,
   loginUser,
   logoutUser,
+  isUserRegistered,
+  getStoreWhatsAppNumber,
+  buildWhatsAppOrderMessage,
+  dispatchOrderToWhatsApp,
+  getItemNumericPrice,
+  getItemNumericQuantity,
+  updateCardPriceDisplay,
   showToast
 };
 

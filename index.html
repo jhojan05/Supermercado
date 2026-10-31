@@ -17,7 +17,7 @@
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       font-src 'self' https://fonts.gstatic.com;
       img-src 'self' data: https://supermercadolacasona.com.co;
-      connect-src 'self';
+      connect-src 'self' http://localhost:* ws://localhost:*;
       frame-ancestors 'none';
       base-uri 'self';
       form-action 'self';
@@ -531,6 +531,10 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                 Mis pedidos registrados
               </button>
+              <a href="consola/index.html" class="dropdown-item" id="btn-dropdown-admin" role="menuitem" style="color: #059669; font-weight: 600;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                Consola Administrativa
+              </a>
               <div class="dropdown-divider"></div>
               <button type="button" class="dropdown-item dropdown-logout-btn" id="btn-dropdown-logout" role="menuitem">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
@@ -1051,8 +1055,8 @@
         <span id="cart-total">$ 0</span>
       </div>
       <button type="button" class="cart-checkout-btn" id="checkout-open-btn">
-        <span>Confirmar Pedido</span>
-        <span aria-hidden="true">✓</span>
+        <span>Comprar</span>
+        <span aria-hidden="true">📲</span>
       </button>
       <button type="button" class="cart-clear-btn" id="clear-cart-btn">
         Vaciar carrito
@@ -1093,7 +1097,7 @@
       <div class="modal-body">
         <div id="checkout-form-container">
           <p class="checkout-notice">
-            Completa tus datos de contacto para simular tu orden de compra en Supermercado La Casona de Anorí.
+            Ingresa tus datos una sola vez para enviar tu pedido con el detalle completo al WhatsApp de Supermercado La Casona.
           </p>
           <form id="checkout-form" novalidate autocomplete="off">
             <!-- CAMPO HONEYPOT ANTI-BOT: oculto visualmente, jamás debe ser rellenado por humanos -->
@@ -1101,16 +1105,24 @@
               <label for="website_hp_co">No completar</label>
               <input type="text" id="website_hp_co" name="website_hp" tabindex="-1" autocomplete="off">
             </div>
+            
+            <div class="form-group">
+              <label for="checkout-name" class="form-label">Nombre completo *</label>
+              <input type="text" id="checkout-name" class="form-input" placeholder="Ej. Carlos Restrepo"
+                required maxlength="60" minlength="2" autocomplete="name"
+                pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'\-]{2,60}"
+                title="Solo letras y espacios, entre 2 y 60 caracteres">
+            </div>
+
             <div class="form-grid-2">
               <div class="form-group">
-                <label for="checkout-name" class="form-label">Nombre completo *</label>
-                <input type="text" id="checkout-name" class="form-input" placeholder="Ej. Carlos Restrepo"
-                  required maxlength="60" minlength="2" autocomplete="name"
-                  pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'\-]{2,60}"
-                  title="Solo letras y espacios, entre 2 y 60 caracteres">
+                <label for="checkout-neighborhood" class="form-label">Barrio o sector en Anorí *</label>
+                <input type="text" id="checkout-neighborhood" class="form-input" placeholder="Ej. El Carmelo, Parque Principal"
+                  required maxlength="60" minlength="2" autocomplete="address-level2"
+                  title="Indica tu barrio o sector para entrega en Anorí">
               </div>
               <div class="form-group">
-                <label for="checkout-phone" class="form-label">Teléfono celular *</label>
+                <label for="checkout-phone" class="form-label">Número de celular *</label>
                 <input type="tel" id="checkout-phone" class="form-input" placeholder="Ej. 310 381 0674"
                   required maxlength="15" minlength="7" autocomplete="tel"
                   pattern="[0-9\s\-\+\(\)]{7,15}"
@@ -1122,8 +1134,8 @@
               <label class="form-label">Forma de pago *</label>
               <div class="payment-options-grid">
                 <label class="payment-option-label">
-                  <input type="radio" name="paymentMethod" value="Efectivo en caja" checked>
-                  <span>Efectivo en caja</span>
+                  <input type="radio" name="paymentMethod" value="Efectivo contra entrega" checked>
+                  <span>Efectivo contra entrega</span>
                 </label>
                 <label class="payment-option-label">
                   <input type="radio" name="paymentMethod" value="Datáfono / Tarjeta">
@@ -1154,8 +1166,8 @@
             </div>
 
             <button type="submit" class="cart-checkout-btn" style="width: 100%;">
-              <span>Confirmar Mi Pedido</span>
-              <span aria-hidden="true">✓</span>
+              <span>Enviar Pedido a WhatsApp</span>
+              <span aria-hidden="true">📲</span>
             </button>
           </form>
         </div>
@@ -1163,20 +1175,25 @@
         <!-- Pantalla de Éxito -->
         <div id="checkout-success-container" class="order-success-box" style="display: none;">
           <div class="success-icon-wrap">✓</div>
-          <h3 class="modal-title" style="margin-bottom: 8px;">¡Pedido Confirmado con Éxito!</h3>
+          <h3 class="modal-title" style="margin-bottom: 8px;">¡Pedido Enviado al WhatsApp!</h3>
           <p style="color: var(--color-text-muted); font-size: 0.92rem;">
-            Hemos registrado tu orden de supermercado correctamente en nuestra sede de Anorí.
+            Hemos preparado la lista de tu orden y abierto el chat con Supermercado La Casona.
           </p>
           <div class="order-code-badge" id="order-code-display">
             ORDEN #LC-2026-7842
           </div>
-          <p style="font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 20px;"
+          <p style="font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 16px;"
             id="order-summary-details">
             Alistamiento inmediato en tienda física del Parque Principal.
           </p>
-          <button type="button" class="btn btn-primary" id="success-done-btn" style="width: 100%;">
-            Seguir explorando el supermercado
-          </button>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <a href="#" id="reopen-whatsapp-link" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="display: inline-flex; justify-content: center; align-items: center; gap: 8px; background: #25D366; color: #FFFFFF !important; border: none; font-weight: 700; text-decoration: none; padding: 12px; border-radius: 8px;">
+              <span>📲 Reabrir chat de WhatsApp</span>
+            </a>
+            <button type="button" class="btn btn-primary" id="success-done-btn" style="width: 100%;">
+              Seguir explorando el supermercado
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1394,6 +1411,7 @@
             <li><a href="#compromiso-anori" class="footer-link">Compromiso con Anorí</a></li>
             <li><a href="#catalogo" class="footer-link" onclick="app.filterOnlyOffers(true)">Promociones del día</a></li>
             <li><a href="llms.txt" class="footer-link" target="_blank" rel="noopener">Ficha de IA Generativa (llms.txt)</a></li>
+            <li><a href="consola/index.html" class="footer-link" style="color: #6EE7B7; font-weight: 600;">Consola Administrativa</a></li>
           </ul>
         </div>
 

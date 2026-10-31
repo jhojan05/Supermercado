@@ -71,6 +71,19 @@ const PRODUCTS = [
     badge: null,
     origen: "Cosecha Seleccionada"
   },
+  {
+    id: 23,
+    nombre: "Papa Pastusa Seleccionada",
+    categoria: "Frutas y verduras",
+    presentacion: "Bolsa x 1 kg",
+    precio: 6000,
+    precioAnterior: 7000,
+    imagen: "assets/papa.svg",
+    disponible: true,
+    destacado: true,
+    badge: "Tradicional",
+    origen: "Cundinamarca / Boyacá"
+  },
 
   // --- CARNES Y HUEVOS ---
   {

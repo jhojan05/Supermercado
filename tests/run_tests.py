@@ -150,10 +150,17 @@ def test_form_security_and_honeypots():
         html = f.read()
 
     assert_test("Honeypot presente en formulario checkout (#website_hp_co)", 'id="website_hp_co"' in html)
+    assert_test("Campo de barrio o sector en checkout (#checkout-neighborhood)", 'id="checkout-neighborhood"' in html)
+    assert_test("Botón de checkout configurado como Comprar (#checkout-open-btn)", 'id="checkout-open-btn"' in html and 'Comprar' in html)
     assert_test("Honeypot presente en formulario login (#website_hp_lf)", 'id="website_hp_lf"' in html)
     assert_test("Honeypot presente en formulario registro (#website_hp_rf)", 'id="website_hp_rf"' in html)
     assert_test("Formulario de checkout tiene novalidate para validación defensiva en JS", '<form id="checkout-form" novalidate' in html)
     assert_test("Longitud máxima (maxlength) delimitada en campos sensibles", 'maxlength="60"' in html and 'maxlength="15"' in html)
+
+    css_path = os.path.join(BASE_DIR, "css", "styles.css")
+    with open(css_path, "r", encoding="utf-8") as f:
+        css = f.read()
+    assert_test("Botón flotante de WhatsApp reubicado a la izquierda (left: 24px)", 'left: 24px;' in css and '.whatsapp-float-btn' in css)
 
 def test_data_integrity():
     print(f"\n{Color.BOLD}{Color.CYAN}--- 5. Pruebas de Integridad de Datos (js/products.js) ---{Color.RESET}")
