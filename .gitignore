@@ -1,0 +1,12 @@
+# Variables de entorno y secretos (NUNCA subir a GitHub)
+.env
+.env.*
+backend/.env
+!**/.env.example
+
+# Dependencias y archivos temporales
+node_modules/
+npm-debug.log*
+.DS_Store
+Thumbs.db
+

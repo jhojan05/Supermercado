@@ -39,6 +39,7 @@ app.get('/api/health', async (req, res) => {
       status: 'UP',
       timestamp: new Date().toISOString(),
       service: 'Supermercado La Casona - Backend API',
+      provider: db.isSupabaseConnection ? 'Supabase Cloud PostgreSQL' : 'Docker PostgreSQL Local',
       database: {
         connected: true,
         time: dbTest.rows[0].now,
@@ -76,17 +77,19 @@ app.use('/api/*', (req, res) => {
   });
 });
 
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`==========================================================`);
-  console.log(` SUPERMERCADO LA CASONA - SERVIDOR BACKEND ACTIVO`);
-  console.log(` Localidad: Anorí, Antioquia`);
-  console.log(` Puerto: http://localhost:${PORT}`);
-  console.log(` Tienda Principal: http://localhost:${PORT}/`);
-  console.log(` Consola Administrativa: http://localhost:${PORT}/consola/`);
-  console.log(` API REST Health: http://localhost:${PORT}/api/health`);
-  console.log(` Base de Datos: PostgreSQL (Docker Desktop)`);
-  console.log(`==========================================================`);
-});
+// Iniciar servidor local (en Vercel Serverless se exporta `app` directamente)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`==========================================================`);
+    console.log(` SUPERMERCADO LA CASONA - SERVIDOR BACKEND ACTIVO`);
+    console.log(` Localidad: Anorí, Antioquia`);
+    console.log(` Puerto: http://localhost:${PORT}`);
+    console.log(` Tienda Principal: http://localhost:${PORT}/`);
+    console.log(` Consola Administrativa: http://localhost:${PORT}/consola/`);
+    console.log(` API REST Health: http://localhost:${PORT}/api/health`);
+    console.log(` Base de Datos: ${db.isSupabaseConnection ? 'Supabase Cloud (PostgreSQL)' : 'PostgreSQL (Docker Desktop)'}`);
+    console.log(`==========================================================`);
+  });
+}
 
 module.exports = app;

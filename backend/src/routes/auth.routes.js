@@ -3,9 +3,22 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
-const { authenticateToken, JWT_SECRET } = require('../middlewares/auth');
+const { authenticateToken, requireAdmin, JWT_SECRET } = require('../middlewares/auth');
 
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+
+/**
+ * GET /api/auth/config
+ * Configuración pública segura de Supabase Auth para el cliente (NUNCA expone service_role)
+ */
+router.get('/config', (req, res) => {
+  res.json({
+    success: true,
+    supabaseEnabled: Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY),
+    supabaseUrl: process.env.SUPABASE_URL || null,
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || null
+  });
+});
 
 /**
  * POST /api/auth/login
@@ -24,8 +37,8 @@ router.post('/login', async (req, res) => {
 
     const cleanEmail = String(email).trim().toLowerCase();
     const result = await db.query(
-      `SELECT id, nombre, email, password_hash, telefono, direccion, rol, activo
-       FROM usuarios
+      `SELECT id, uuid, auth_user_id, nombre, email, password_hash, telefono, direccion, rol, activo
+       FROM public.usuarios
        WHERE LOWER(email) = $1`,
       [cleanEmail]
     );
@@ -57,9 +70,11 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign(
       {
         id: user.id,
+        sub: user.auth_user_id || user.uuid,
         nombre: user.nombre,
         email: user.email,
-        rol: user.rol
+        rol: user.rol,
+        app_metadata: { rol: user.rol }
       },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
@@ -68,7 +83,7 @@ router.post('/login', async (req, res) => {
     // Registro de auditoría si es administrador
     if (user.rol === 'admin' || user.rol === 'gestor') {
       await db.query(
-        `INSERT INTO logs_auditoria (usuario_id, accion, modulo, detalle, ip_origen)
+        `INSERT INTO public.logs_auditoria (usuario_id, accion, modulo, detalle, ip_origen)
          VALUES ($1, 'LOGIN_ADMIN', 'SEGURIDAD', $2, $3)`,
         [user.id, JSON.stringify({ email: user.email }), req.ip]
       );
@@ -80,6 +95,7 @@ router.post('/login', async (req, res) => {
       token,
       user: {
         id: user.id,
+        uuid: user.uuid,
         nombre: user.nombre,
         email: user.email,
         telefono: user.telefono,
@@ -114,7 +130,7 @@ router.post('/register', async (req, res) => {
     const cleanEmail = String(email).trim().toLowerCase();
 
     // Validar existencia de correo
-    const existing = await db.query(`SELECT id FROM usuarios WHERE LOWER(email) = $1`, [cleanEmail]);
+    const existing = await db.query(`SELECT id FROM public.usuarios WHERE LOWER(email) = $1`, [cleanEmail]);
     if (existing.rows.length > 0) {
       return res.status(409).json({
         success: false,
@@ -124,9 +140,9 @@ router.post('/register', async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
     const result = await db.query(
-      `INSERT INTO usuarios (nombre, email, password_hash, telefono, direccion, rol, activo)
+      `INSERT INTO public.usuarios (nombre, email, password_hash, telefono, direccion, rol, activo)
        VALUES ($1, $2, $3, $4, $5, 'cliente', true)
-       RETURNING id, nombre, email, telefono, direccion, rol`,
+       RETURNING id, uuid, nombre, email, telefono, direccion, rol`,
       [nombre.trim(), cleanEmail, passwordHash, telefono ? telefono.trim() : null, direccion ? direccion.trim() : null]
     );
 
@@ -134,9 +150,11 @@ router.post('/register', async (req, res) => {
     const token = jwt.sign(
       {
         id: newUser.id,
+        sub: newUser.uuid,
         nombre: newUser.nombre,
         email: newUser.email,
-        rol: newUser.rol
+        rol: newUser.rol,
+        app_metadata: { rol: newUser.rol }
       },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
@@ -159,13 +177,13 @@ router.post('/register', async (req, res) => {
 
 /**
  * GET /api/auth/me
- * Obtener perfil del usuario en sesión
+ * Ruta protegida: Obtener perfil del usuario autenticado en sesión
  */
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT id, nombre, email, telefono, direccion, rol, creado_en
-       FROM usuarios
+      `SELECT id, uuid, auth_user_id, nombre, email, telefono, direccion, rol, creado_en
+       FROM public.usuarios
        WHERE id = $1 AND activo = true`,
       [req.user.id]
     );
@@ -186,6 +204,48 @@ router.get('/me', authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error al consultar la sesión'
+    });
+  }
+});
+
+/**
+ * GET /api/auth/verify-admin
+ * Ruta protegida administrativa: Verifica sesión activa y rol autoritativo en public.usuarios
+ */
+router.get('/verify-admin', authenticateToken, requireAdmin, (req, res) => {
+  res.json({
+    success: true,
+    authorized: true,
+    user: {
+      id: req.user.id,
+      nombre: req.user.nombre,
+      email: req.user.email,
+      rol: req.user.rol
+    }
+  });
+});
+
+/**
+ * POST /api/auth/logout
+ * Ruta protegida: Cierre de sesión con trazabilidad de auditoría
+ */
+router.post('/logout', authenticateToken, async (req, res) => {
+  try {
+    if (req.user && (req.user.rol === 'admin' || req.user.rol === 'gestor')) {
+      await db.query(
+        `INSERT INTO public.logs_auditoria (usuario_id, accion, modulo, detalle, ip_origen)
+         VALUES ($1, 'LOGOUT_ADMIN', 'SEGURIDAD', $2, $3)`,
+        [req.user.id, JSON.stringify({ email: req.user.email }), req.ip]
+      );
+    }
+    res.json({
+      success: true,
+      message: 'Sesión cerrada correctamente'
+    });
+  } catch (_err) {
+    res.json({
+      success: true,
+      message: 'Sesión cerrada'
     });
   }
 });

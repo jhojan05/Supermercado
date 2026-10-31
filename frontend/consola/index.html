@@ -2028,8 +2028,8 @@
      * Resuelve las URL base para conectar con el backend Express + PostgreSQL
      */
     function getApiBases() {
-      // Si estamos directamente en el puerto del backend (3000), usar rutas relativas primero
-      if (window.location.port === '3000') {
+      // Si estamos en la nube (HTTPS en Vercel/dominio) o en el puerto del backend (3000), usar rutas relativas primero
+      if (window.location.protocol === 'https:' || window.location.port === '3000') {
         return ['/api', 'http://localhost:3000/api', 'http://127.0.0.1:3000/api'];
       }
       // Si estamos en Live Server (5500, etc.) o file://, ir directo a localhost:3000

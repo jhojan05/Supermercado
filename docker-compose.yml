@@ -3,14 +3,25 @@ services:
     image: postgres:16-alpine
     container_name: casona_postgres
     restart: unless-stopped
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_replication_slots=10"
+      - "-c"
+      - "max_wal_senders=10"
     environment:
       POSTGRES_USER: ${DB_USER:-casona_admin}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-casona_secret_2026}
       POSTGRES_DB: ${DB_NAME:-supermercado_casona}
+      TZ: UTC
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/src/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./supabase/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-casona_admin} -d ${DB_NAME:-supermercado_casona}"]
       interval: 5s

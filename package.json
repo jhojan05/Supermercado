@@ -1,0 +1,22 @@
+{
+  "name": "supermercado-la-casona",
+  "version": "2.0.0",
+  "description": "Plataforma E-Commerce, Consola Administrativa y API Serverless con Supabase para Supermercado La Casona (Anorí, Antioquia)",
+  "main": "backend/src/server.js",
+  "scripts": {
+    "start": "node backend/src/server.js",
+    "dev": "node --watch backend/src/server.js",
+    "db:init": "node backend/src/db/seed.js",
+    "test": "python tests/run_tests.py"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "pg": "^8.13.1"
+  }
+}

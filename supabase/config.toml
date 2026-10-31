@@ -1,0 +1,23 @@
+# Configuración oficial de proyecto Supabase (Supermercado La Casona - Anorí)
+project_id = "supermercado-la-casona"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 16
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+enable_signup = true
+

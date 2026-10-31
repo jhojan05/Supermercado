@@ -69,6 +69,11 @@ def test_file_structure():
         "frontend/sitemap.xml",
         "frontend/llms.txt",
         "frontend/llms-full.txt",
+        "backend/src/db/schema.sql",
+        "backend/src/db/seed.js",
+        "supabase/config.toml",
+        "supabase/seed.sql",
+        "supabase/migrations/20261031000000_initial_schema.sql",
         "tests/test-runner.html",
         "tests/tests.js"
     ]
