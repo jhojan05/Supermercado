@@ -50,6 +50,7 @@ app.get('/api/health', async (req, res) => {
     res.status(500).json({
       status: 'DOWN',
       timestamp: new Date().toISOString(),
+      hasDatabaseUrl: Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.SUPABASE_DB_URL),
       database: {
         connected: false,
         error: err.message

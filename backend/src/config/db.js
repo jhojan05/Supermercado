@@ -3,9 +3,25 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 // Soporte dual:
-// 1. Conexión directa o Transaction Pooler de Supabase mediante DATABASE_URL / SUPABASE_DB_URL
+// 1. Conexión directa o Transaction/Session Pooler de Supabase mediante DATABASE_URL / POSTGRES_URL / SUPABASE_DB_URL
 // 2. Conexión local al contenedor Docker PostgreSQL (casona_postgres)
-const connectionString = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL || '';
+let connectionString = (
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_URL ||
+  process.env.SUPABASE_DB_URL ||
+  ''
+).trim();
+
+// Si se proporcionó el host directo IPv6 de Supabase (db.<ref>.supabase.co),
+// convertir automáticamente al Session Pooler IPv4 (aws-0-us-east-1.pooler.supabase.com)
+const directMatch = connectionString.match(
+  /^postgres(?:ql)?:\/\/postgres:([^@]+)@db\.([a-z0-9]+)\.supabase\.co:5432\/postgres/i
+);
+if (directMatch) {
+  const [, password, projectRef] = directMatch;
+  connectionString = `postgresql://postgres.${projectRef}:${password}@aws-0-us-east-1.pooler.supabase.com:5432/postgres`;
+}
+
 const isSupabaseConnection =
   connectionString.includes('supabase.co') ||
   connectionString.includes('supabase.com') ||
@@ -15,7 +31,7 @@ const poolConfig = connectionString
   ? {
       connectionString,
       ssl: isSupabaseConnection ? { rejectUnauthorized: false } : false,
-      max: 20,
+      max: 10,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000,
     }
