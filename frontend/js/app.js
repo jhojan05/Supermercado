@@ -11,6 +11,8 @@ const STORAGE_KEYS = {
   CART: "supermercado_casona_cart",
   FAVORITES: "supermercado_casona_favorites",
   USER: "supermercado_casona_user",
+  TOKEN: "supermercado_casona_token",
+  CUSTOMERS: "supermercado_casona_customers",
   PRODUCTS: "supermercado_casona_products_catalog",
   SETTINGS: "supermercado_casona_settings",
   OLD_CART: "supermercado_verde_cart",
@@ -1462,6 +1464,15 @@ async function submitOrderToBackend(orderPayload) {
   endpoints.push('http://127.0.0.1:3000/api/orders');
 
   const uniqueEndpoints = [...new Set(endpoints)];
+  let authToken = null;
+  try {
+    authToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
+  } catch (e) {}
+
+  const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
 
   for (const url of uniqueEndpoints) {
     try {
@@ -1470,7 +1481,7 @@ async function submitOrderToBackend(orderPayload) {
       const res = await fetch(url, {
         method: 'POST',
         signal: controller.signal,
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        headers,
         body: JSON.stringify(orderPayload)
       });
       clearTimeout(timeoutId);
@@ -1553,6 +1564,7 @@ function dispatchOrderToWhatsApp(clientData) {
   // Notificar al backend Node.js + PostgreSQL (Supabase)
   const orderPayload = {
     nombre: clientData.nombre,
+    email: (state.user && state.user.email) ? state.user.email : undefined,
     telefono: clientData.telefono,
     direccion: clientData.barrio || clientData.direccion || 'Anorí',
     notas: clientData.notas || '',
@@ -1776,6 +1788,123 @@ function handleCheckoutSubmit(e) {
    ========================================================================== */
 
 /**
+ * Petición multitransporte a los endpoints de autenticación (/api/auth/register, /api/auth/login)
+ */
+async function authApiRequest(subPath, payload) {
+  const cleanSubPath = subPath.startsWith('/') ? subPath : `/${subPath}`;
+  const endpoints = [];
+  if (window.location.protocol !== 'file:' && window.location.origin && window.location.origin !== 'null') {
+    endpoints.push(`${window.location.origin}/api/auth${cleanSubPath}`);
+  }
+  endpoints.push(`/api/auth${cleanSubPath}`);
+  endpoints.push(`http://localhost:3000/api/auth${cleanSubPath}`);
+  endpoints.push(`http://127.0.0.1:3000/api/auth${cleanSubPath}`);
+
+  const uniqueEndpoints = [...new Set(endpoints)];
+
+  for (const url of uniqueEndpoints) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4500);
+      const res = await fetch(url, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      clearTimeout(timeoutId);
+
+      const contentType = res.headers && typeof res.headers.get === 'function' ? (res.headers.get('content-type') || '') : 'application/json';
+      if (!contentType.includes('application/json')) continue;
+
+      const data = await res.json();
+      return { reachable: true, status: res.status, ok: res.ok, data };
+    } catch (_err) {
+      // Probar siguiente endpoint
+    }
+  }
+  return { reachable: false, status: 0, ok: false, data: null };
+}
+
+/**
+ * Sincroniza un cliente registrado en el caché compartido y notifica a la Consola Administrativa
+ */
+function syncCustomerToAdminConsole(customerData) {
+  if (!customerData || !customerData.email) return;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.CUSTOMERS);
+    const list = raw ? JSON.parse(raw) : [];
+    const cleanEmail = String(customerData.email).trim().toLowerCase();
+    const idx = list.findIndex(c => String(c.email || '').trim().toLowerCase() === cleanEmail);
+    const entry = {
+      id: customerData.id || Date.now(),
+      nombre: customerData.nombre,
+      email: cleanEmail,
+      telefono: customerData.telefono || '',
+      direccion: customerData.direccion || customerData.barrio || 'Anorí, Antioquia',
+      rol: 'cliente',
+      creado_en: customerData.creado_en || new Date().toISOString(),
+      total_pedidos: Array.isArray(customerData.pedidos) ? customerData.pedidos.length : (customerData.total_pedidos || 0),
+      total_comprado: customerData.total_comprado || 0
+    };
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...entry };
+    } else {
+      list.unshift(entry);
+    }
+    localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(list));
+    window.dispatchEvent(new Event('storage'));
+  } catch (e) {}
+
+  try {
+    if (typeof BroadcastChannel !== 'undefined') {
+      const ch = new BroadcastChannel('casona_products_sync');
+      ch.postMessage({ type: 'CUSTOMERS_UPDATED', customer: customerData, timestamp: Date.now() });
+      ch.close();
+    }
+  } catch (e) {}
+}
+
+/**
+ * Si el usuario se había registrado antes en localStorage con un ID local ('usr_...'),
+ * lo sincroniza automáticamente con la base de datos PostgreSQL / Supabase en segundo plano.
+ */
+async function syncPendingLocalUserToBackend() {
+  if (!state.user || !state.user.email || !state.user.nombre) return;
+  const userIdStr = String(state.user.id || '');
+  if (userIdStr === 'usr_demo_1') return;
+
+  // Si el ID es local ('usr_...') o no hay token JWT aún, asegurarse de que exista en PostgreSQL
+  if (userIdStr.startsWith('usr_') && !window.LaCasonaTestsRunning) {
+    try {
+      const result = await authApiRequest('/register', {
+        nombre: state.user.nombre,
+        email: state.user.email,
+        telefono: state.user.telefono || '310 000 0000',
+        direccion: state.user.direccion || state.user.barrio || 'Anorí, Antioquia',
+        password: state.user._tempSyncKey || 'ClienteCasona2026*'
+      });
+      if (result.reachable && result.data) {
+        if (result.data.success && result.data.user) {
+          state.user.id = result.data.user.id;
+          state.user.uuid = result.data.user.uuid;
+          state.user.rol = result.data.user.rol || 'cliente';
+          delete state.user._tempSyncKey;
+          if (result.data.token) {
+            localStorage.setItem(STORAGE_KEYS.TOKEN, result.data.token);
+          }
+          saveUser();
+          syncCustomerToAdminConsole(state.user);
+        } else if (result.status === 409) {
+          // Ya existe en la base de datos PostgreSQL
+          syncCustomerToAdminConsole(state.user);
+        }
+      }
+    } catch (_e) {}
+  }
+}
+
+/**
  * Carga el usuario desde localStorage
  */
 function loadUser() {
@@ -1786,6 +1915,9 @@ function loadUser() {
       state.user = (typeof Security !== 'undefined')
         ? Security.safeJSONParse(raw, null)
         : JSON.parse(raw);
+      if (state.user) {
+        syncPendingLocalUserToBackend();
+      }
     }
   } catch (e) {
     state.user = null;
@@ -1810,9 +1942,17 @@ function saveUser() {
 /**
  * Inicia sesión con los datos de usuario
  */
-function loginUser(userData) {
+function loginUser(userData, token = null) {
   state.user = userData;
+  if (token) {
+    try {
+      localStorage.setItem(STORAGE_KEYS.TOKEN, token);
+    } catch (e) {}
+  }
   saveUser();
+  if (userData && userData.email && userData.id !== 'usr_demo_1') {
+    syncCustomerToAdminConsole(userData);
+  }
   updateUserUI();
   closeLoginModal();
   showToast(`¡Bienvenido, ${userData.nombre.split(" ")[0]}!`, "success");
@@ -1824,6 +1964,9 @@ function loginUser(userData) {
 function logoutUser() {
   const firstName = state.user ? state.user.nombre.split(" ")[0] : "Usuario";
   state.user = null;
+  try {
+    localStorage.removeItem(STORAGE_KEYS.TOKEN);
+  } catch (e) {}
   saveUser();
   updateUserUI();
   closeUserDropdown();
@@ -2198,9 +2341,9 @@ function bindEvents() {
     });
   }
 
-  // Enviar formulario de inicio de sesión
+  // Enviar formulario de inicio de sesión (conectado a PostgreSQL /api/auth/login)
   if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       // Anti-bot honeypot
@@ -2215,7 +2358,9 @@ function bindEvents() {
       }
 
       const emailInput = document.getElementById('login-email');
-      const rawEmail   = emailInput ? emailInput.value.trim() : 'cliente@correo.com';
+      const passInput  = document.getElementById('login-password');
+      const rawEmail   = emailInput ? emailInput.value.trim() : '';
+      const rawPass    = passInput ? passInput.value : '';
 
       // Validación de formato de email
       if (typeof Security !== 'undefined') {
@@ -2227,23 +2372,75 @@ function bindEvents() {
         }
       }
 
-      const safeEmail     = typeof Security !== 'undefined' ? Security.escapeHTML(rawEmail) : rawEmail;
-      const nameGuess     = safeEmail.split('@')[0].replace(/[._-]/g, ' ');
-      const formattedName = nameGuess.charAt(0).toUpperCase() + nameGuess.slice(1);
+      if (!rawPass || rawPass.length < 4) {
+        showToast('Por favor ingresa tu contraseña.', 'error');
+        if (passInput) passInput.focus();
+        return;
+      }
 
-      loginUser({
-        id:       'usr_' + Date.now(),
-        nombre:   formattedName,
-        email:    safeEmail,
-        telefono: '310 123 4567',
-        pedidos:  []
-      });
+      const submitBtn = loginForm.querySelector('button[type="submit"]');
+      const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>Verificando cuenta...</span>';
+      }
+
+      try {
+        const apiResult = await authApiRequest('/login', {
+          email: rawEmail,
+          password: rawPass
+        });
+
+        if (apiResult.reachable) {
+          if (!apiResult.ok || !apiResult.data || !apiResult.data.success) {
+            showToast((apiResult.data && apiResult.data.message) || 'Credenciales inválidas. Revisa tu correo o contraseña.', 'error');
+            return;
+          }
+
+          const dbUser = apiResult.data.user;
+          const token = apiResult.data.token;
+          if (typeof Security !== 'undefined' && typeof Security.clearSensitiveInputs === 'function') {
+            Security.clearSensitiveInputs(loginForm);
+          }
+
+          loginUser({
+            id:        dbUser.id,
+            uuid:      dbUser.uuid,
+            nombre:    dbUser.nombre,
+            email:     dbUser.email,
+            telefono:  dbUser.telefono || '',
+            direccion: dbUser.direccion || 'Anorí, Antioquia',
+            barrio:    dbUser.direccion || 'Anorí, Antioquia',
+            rol:       dbUser.rol || 'cliente',
+            pedidos:   []
+          }, token);
+          return;
+        }
+
+        // Respaldo únicamente si el servidor no está accesible (Modo Offline)
+        const safeEmail     = typeof Security !== 'undefined' ? Security.escapeHTML(rawEmail) : rawEmail;
+        const nameGuess     = safeEmail.split('@')[0].replace(/[._-]/g, ' ');
+        const formattedName = nameGuess.charAt(0).toUpperCase() + nameGuess.slice(1);
+
+        loginUser({
+          id:       'usr_' + Date.now(),
+          nombre:   formattedName,
+          email:    safeEmail,
+          telefono: '310 123 4567',
+          pedidos:  []
+        });
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
+        }
+      }
     });
   }
 
-  // Enviar formulario de registro
+  // Enviar formulario de registro (conectado a PostgreSQL /api/auth/register)
   if (registerForm) {
-    registerForm.addEventListener('submit', (e) => {
+    registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       // Anti-bot honeypot
@@ -2251,9 +2448,9 @@ function bindEvents() {
         console.warn('[Security] Bot detectado en registro.');
         return;
       }
-      // Rate limiting: máx 3 registros en 10 minutos
-      if (typeof Security !== 'undefined' && !Security.rateLimit('register_submit', 3, 600000)) {
-        showToast('Demasiados intentos de registro. Espera 10 minutos.', 'error');
+      // Rate limiting: máx 5 registros en 10 minutos
+      if (typeof Security !== 'undefined' && !Security.rateLimit('register_submit', 5, 600000)) {
+        showToast('Demasiados intentos de registro. Espera unos minutos.', 'error');
         return;
       }
 
@@ -2261,32 +2458,93 @@ function bindEvents() {
       const rawEmail = document.getElementById('reg-email').value.trim();
       const rawPhone = document.getElementById('reg-phone').value.trim();
       const rawPass  = document.getElementById('reg-password').value;
+      const termsEl  = document.getElementById('reg-terms');
 
       if (typeof Security !== 'undefined') {
         const nameCheck  = Security.validateName(rawName);
-        if (!nameCheck.valid)  { showToast('Nombre inválido: ' + nameCheck.reason, 'error'); return; }
+        if (!nameCheck.valid)  { showToast('Nombre inválido: ' + (nameCheck.error || nameCheck.reason), 'error'); return; }
 
         const emailCheck = Security.validateEmail(rawEmail);
-        if (!emailCheck.valid) { showToast('Correo inválido: ' + emailCheck.reason, 'error'); return; }
+        if (!emailCheck.valid) { showToast('Correo inválido: ' + (emailCheck.error || emailCheck.reason), 'error'); return; }
 
         const phoneCheck = Security.validatePhone(rawPhone);
-        if (!phoneCheck.valid) { showToast('Teléfono inválido: ' + phoneCheck.reason, 'error'); return; }
+        if (!phoneCheck.valid) { showToast('Teléfono inválido: ' + (phoneCheck.error || phoneCheck.reason), 'error'); return; }
 
         const passCheck  = Security.validatePassword(rawPass);
-        if (!passCheck.valid)  { showToast('Contraseña débil: ' + passCheck.reason, 'error'); return; }
+        if (!passCheck.valid)  { showToast('Contraseña débil: ' + (passCheck.error || passCheck.reason), 'error'); return; }
       }
 
-      const safeName  = typeof Security !== 'undefined' ? Security.escapeHTML(rawName)  : rawName;
-      const safeEmail = typeof Security !== 'undefined' ? Security.escapeHTML(rawEmail) : rawEmail;
-      const safePhone = typeof Security !== 'undefined' ? Security.escapeHTML(rawPhone) : rawPhone;
+      if (termsEl && !termsEl.checked) {
+        showToast('Debes aceptar los términos de servicio para crear tu cuenta.', 'error');
+        return;
+      }
 
-      loginUser({
-        id:       'usr_' + Date.now(),
-        nombre:   safeName,
-        email:    safeEmail,
-        telefono: safePhone,
-        pedidos:  []
-      });
+      const submitBtn = registerForm.querySelector('button[type="submit"]');
+      const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>Creando cuenta...</span>';
+      }
+
+      try {
+        const apiResult = await authApiRequest('/register', {
+          nombre: rawName,
+          email: rawEmail,
+          telefono: rawPhone,
+          password: rawPass,
+          direccion: 'Anorí, Antioquia'
+        });
+
+        if (apiResult.reachable) {
+          if (!apiResult.ok || !apiResult.data || !apiResult.data.success) {
+            showToast((apiResult.data && apiResult.data.message) || 'No se pudo completar el registro. Verifica tus datos.', 'error');
+            return;
+          }
+
+          const createdUser = apiResult.data.user;
+          const token = apiResult.data.token;
+          if (typeof Security !== 'undefined' && typeof Security.clearSensitiveInputs === 'function') {
+            Security.clearSensitiveInputs(registerForm);
+          }
+          registerForm.reset();
+
+          loginUser({
+            id:        createdUser.id,
+            uuid:      createdUser.uuid,
+            nombre:    createdUser.nombre,
+            email:     createdUser.email,
+            telefono:  createdUser.telefono || rawPhone,
+            direccion: createdUser.direccion || 'Anorí, Antioquia',
+            barrio:    createdUser.direccion || 'Anorí, Antioquia',
+            rol:       createdUser.rol || 'cliente',
+            creado_en: createdUser.creado_en || new Date().toISOString(),
+            pedidos:   []
+          }, token);
+          return;
+        }
+
+        // Respaldo si el backend está temporalmente sin conexión (se sincronizará automáticamente al reconectar)
+        const safeName  = typeof Security !== 'undefined' ? Security.escapeHTML(rawName)  : rawName;
+        const safeEmail = typeof Security !== 'undefined' ? Security.escapeHTML(rawEmail) : rawEmail;
+        const safePhone = typeof Security !== 'undefined' ? Security.escapeHTML(rawPhone) : rawPhone;
+
+        loginUser({
+          id:           'usr_' + Date.now(),
+          nombre:       safeName,
+          email:        safeEmail,
+          telefono:     safePhone,
+          direccion:    'Anorí, Antioquia',
+          barrio:       'Anorí, Antioquia',
+          rol:          'cliente',
+          _tempSyncKey: rawPass,
+          pedidos:      []
+        });
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
+        }
+      }
     });
   }
 

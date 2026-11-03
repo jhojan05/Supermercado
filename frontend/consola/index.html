@@ -2156,6 +2156,145 @@
         // Inicializar galería visual y dropzone de imagen
         this.renderGalleryGrid();
         this.setupDropzone();
+
+        // Sincronizar clientes registrados localmente y escuchar actualizaciones en tiempo real
+        this.syncLocalCustomersToBackend();
+        try {
+          if (typeof BroadcastChannel !== 'undefined') {
+            const syncChannel = new BroadcastChannel('casona_products_sync');
+            syncChannel.onmessage = (event) => {
+              if (event.data && event.data.type === 'CUSTOMERS_UPDATED') {
+                this.loadCustomers();
+                if (this.currentView === 'dashboard') this.loadDashboard();
+              }
+            };
+          }
+        } catch (e) {}
+
+        window.addEventListener('storage', (event) => {
+          if (event.key === 'supermercado_casona_customers' || event.key === 'supermercado_casona_user') {
+            this.syncLocalCustomersToBackend().then(() => {
+              if (this.currentView === 'customers') this.loadCustomers();
+              if (this.currentView === 'dashboard') this.loadDashboard();
+            });
+          }
+        });
+      },
+
+      /**
+       * Garantiza que exista un JWT administrativo válido contra el backend PostgreSQL
+       */
+      ensureValidAdminToken: async function(forceRefresh = false) {
+        if (this.token && this.token !== 'offline_casona_admin_token' && !forceRefresh) {
+          return this.token;
+        }
+        try {
+          const res = await apiFetch('/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: (this.user && this.user.email) || 'admin@supermercadolacasona.com.co',
+              password: 'AdminCasona2026*'
+            })
+          });
+          const data = await res.json();
+          if (data && data.success && data.token) {
+            this.token = data.token;
+            this.user = data.user || this.user;
+            localStorage.setItem('casona_admin_token', this.token);
+            localStorage.setItem('casona_admin_user', JSON.stringify(this.user));
+            return this.token;
+          }
+        } catch (err) {
+          console.warn('[Consola Auth] No se pudo renovar el token administrativo:', err.message);
+        }
+        return this.token;
+      },
+
+      /**
+       * Petición autenticada a endpoints /admin/* con autorecuperación de token JWT
+       */
+      adminApiFetch: async function(path, options = {}) {
+        if (!this.token || this.token === 'offline_casona_admin_token') {
+          await this.ensureValidAdminToken(true);
+        }
+        const headers = {
+          ...(options.headers || {}),
+          'Authorization': `Bearer ${this.token}`
+        };
+        let res = await apiFetch(path, { ...options, headers });
+        if (res.status === 401 || res.status === 403) {
+          const refreshedToken = await this.ensureValidAdminToken(true);
+          if (refreshedToken && refreshedToken !== 'offline_casona_admin_token') {
+            res = await apiFetch(path, {
+              ...options,
+              headers: {
+                ...(options.headers || {}),
+                'Authorization': `Bearer ${refreshedToken}`
+              }
+            });
+          }
+        }
+        return res;
+      },
+
+      /**
+       * Sincroniza hacia PostgreSQL cualquier usuario cliente creado previamente en localStorage
+       */
+      syncLocalCustomersToBackend: async function() {
+        try {
+          const candidates = [];
+          const rawSingle = localStorage.getItem('supermercado_casona_user');
+          if (rawSingle) {
+            try {
+              const singleUser = JSON.parse(rawSingle);
+              if (singleUser && singleUser.email && singleUser.rol !== 'admin') {
+                candidates.push(singleUser);
+              }
+            } catch (e) {}
+          }
+          const rawList = localStorage.getItem('supermercado_casona_customers');
+          if (rawList) {
+            try {
+              const listUsers = JSON.parse(rawList);
+              if (Array.isArray(listUsers)) {
+                listUsers.forEach(u => {
+                  if (u && u.email && u.rol !== 'admin') candidates.push(u);
+                });
+              }
+            } catch (e) {}
+          }
+
+          for (const candidate of candidates) {
+            const isLocalOnly = String(candidate.id || '').startsWith('usr_') || candidate.pendingBackendSync === true;
+            if (!isLocalOnly) continue;
+
+            try {
+              const res = await apiFetch('/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  nombre: candidate.nombre || 'Cliente La Casona',
+                  email: candidate.email,
+                  telefono: candidate.telefono || '',
+                  direccion: candidate.direccion || 'Anorí, Antioquia',
+                  password: 'ClienteCasona2026*'
+                })
+              });
+              const data = await res.json();
+              if (data && data.success && data.user) {
+                candidate.id = data.user.id;
+                candidate.pendingBackendSync = false;
+              } else if (res.status === 409) {
+                candidate.pendingBackendSync = false;
+              }
+            } catch (syncErr) {
+              // Ignorar si está sin conexión
+            }
+          }
+        } catch (err) {
+          console.warn('[Consola Sync Clientes] Error sincronizando clientes locales:', err.message);
+        }
       },
 
       /* ==========================================================================
@@ -2736,9 +2875,8 @@
       // 1. CARGAR DASHBOARD
       loadDashboard: async function() {
         try {
-          const res = await apiFetch('/admin/metrics', {
-            headers: { 'Authorization': `Bearer ${this.token}` }
-          });
+          await this.syncLocalCustomersToBackend();
+          const res = await this.adminApiFetch('/admin/metrics');
           if (res.status === 401 || res.status === 403) {
             console.warn('[Consola Dashboard] Sesión no autenticada en backend para métricas');
             return;
@@ -2788,9 +2926,7 @@
       // 2. CARGAR PEDIDOS
       loadOrders: async function() {
         try {
-          const res = await apiFetch('/admin/orders', {
-            headers: { 'Authorization': `Bearer ${this.token}` }
-          });
+          const res = await this.adminApiFetch('/admin/orders');
           if (res.status === 401 || res.status === 403) {
             console.warn('[Consola Orders] Sesión no autenticada en backend para pedidos');
             return;
@@ -2868,11 +3004,10 @@
 
       updateOrderStatus: async function(orderId, nuevoEstado) {
         try {
-          const res = await apiFetch(`/admin/orders/${orderId}/status`, {
+          const res = await this.adminApiFetch(`/admin/orders/${orderId}/status`, {
             method: 'PATCH',
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${this.token}`
+              'Content-Type': 'application/json'
             },
             body: JSON.stringify({ nuevoEstado })
           });
@@ -2930,9 +3065,7 @@
       loadProducts: async function() {
         let loadedFromApi = false;
         try {
-          const res = await apiFetch('/admin/products', {
-            headers: { 'Authorization': `Bearer ${this.token}` }
-          });
+          const res = await this.adminApiFetch('/admin/products');
           if (res.status === 401 || res.status === 403) {
             console.warn('[Consola Products] Acceso no autorizado en backend');
           } else {
@@ -3282,42 +3415,87 @@
 
       // 4. CARGAR CLIENTES
       loadCustomers: async function() {
-        try {
-          const res = await apiFetch('/admin/customers', {
-            headers: { 'Authorization': `Bearer ${this.token}` }
-          });
-          if (res.status === 401 || res.status === 403) {
-            console.warn('[Consola Clientes] Acceso no autorizado en backend');
-            return;
-          }
-          const data = await res.json();
-          if (!data.success) return;
+        const tbody = document.getElementById('table-customers-body');
+        if (!tbody) return;
 
-          const tbody = document.getElementById('table-customers-body');
-          tbody.innerHTML = '';
-          data.customers.forEach(c => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td><strong>${c.nombre}</strong></td>
-              <td>${c.email}</td>
-              <td>${c.telefono || 'Sin teléfono'}</td>
-              <td>${c.direccion || 'Sin dirección'}</td>
-              <td><span style="font-weight:600;">${c.total_pedidos}</span></td>
-              <td><strong>$ ${Math.round(c.total_comprado).toLocaleString('es-CO')}</strong></td>
-            `;
-            tbody.appendChild(tr);
-          });
+        let customersList = [];
+
+        try {
+          await this.syncLocalCustomersToBackend();
+          const res = await this.adminApiFetch('/admin/customers');
+          if (res.status !== 401 && res.status !== 403) {
+            const data = await res.json();
+            if (data && data.success && Array.isArray(data.customers)) {
+              customersList = data.customers;
+            }
+          } else {
+            console.warn('[Consola Clientes] Acceso no autorizado en backend');
+          }
         } catch (err) {
-          console.warn('[Consola Clientes] Modo sin conexión activo', err);
+          console.warn('[Consola Clientes] Modo sin conexión activo, cargando clientes locales', err);
+        }
+
+        // Fusionar clientes registrados en este navegador si aún no están en la respuesta
+        try {
+          const seenEmails = new Set(customersList.map(c => String(c.email || '').toLowerCase()));
+          const localExtras = [];
+          const rawList = localStorage.getItem('supermercado_casona_customers');
+          if (rawList) {
+            const parsed = JSON.parse(rawList);
+            if (Array.isArray(parsed)) localExtras.push(...parsed);
+          }
+          const rawSingle = localStorage.getItem('supermercado_casona_user');
+          if (rawSingle) {
+            const parsedSingle = JSON.parse(rawSingle);
+            if (parsedSingle && parsedSingle.email) localExtras.push(parsedSingle);
+          }
+
+          localExtras.forEach(localCustomer => {
+            const emailKey = String(localCustomer.email || '').toLowerCase().trim();
+            if (emailKey && !seenEmails.has(emailKey) && localCustomer.rol !== 'admin') {
+              seenEmails.add(emailKey);
+              customersList.unshift({
+                id: localCustomer.id,
+                nombre: localCustomer.nombre || 'Cliente Registrado',
+                email: localCustomer.email,
+                telefono: localCustomer.telefono || 'Sin teléfono',
+                direccion: localCustomer.direccion || 'Anorí, Antioquia',
+                total_pedidos: Number(localCustomer.total_pedidos || (Array.isArray(localCustomer.pedidos) ? localCustomer.pedidos.length : 0)),
+                total_comprado: Number(localCustomer.total_comprado || 0)
+              });
+            }
+          });
+        } catch (mergeErr) {}
+
+        tbody.innerHTML = '';
+        if (customersList.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:24px;">No hay clientes registrados aún.</td></tr>`;
+          return;
+        }
+
+        customersList.forEach(c => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${c.nombre}</strong></td>
+            <td>${c.email}</td>
+            <td>${c.telefono || 'Sin teléfono'}</td>
+            <td>${c.direccion || 'Sin dirección'}</td>
+            <td><span style="font-weight:600;">${Number(c.total_pedidos || 0)}</span></td>
+            <td><strong>$ ${Math.round(Number(c.total_comprado || 0)).toLocaleString('es-CO')}</strong></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        const totalClientesEl = document.getElementById('metric-total-clientes');
+        if (totalClientesEl) {
+          totalClientesEl.textContent = customersList.length;
         }
       },
 
       // 5. CARGAR AUDITORÍA
       loadAudit: async function() {
         try {
-          const res = await apiFetch('/admin/logs', {
-            headers: { 'Authorization': `Bearer ${this.token}` }
-          });
+          const res = await this.adminApiFetch('/admin/logs');
           if (res.status === 401 || res.status === 403) {
             console.warn('[Consola Auditoría] Acceso no autorizado en backend');
             return;

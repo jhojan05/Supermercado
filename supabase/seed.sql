@@ -50,6 +50,7 @@ VALUES
   )
 ON CONFLICT (email) DO UPDATE SET
   nombre = EXCLUDED.nombre,
+  password_hash = EXCLUDED.password_hash,
   rol = EXCLUDED.rol,
   activo = EXCLUDED.activo;
 

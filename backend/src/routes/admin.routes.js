@@ -454,22 +454,27 @@ router.get('/customers', async (req, res) => {
   try {
     const result = await db.query(`
       SELECT 
-        u.id, 
+        u.id::int AS id, 
         u.nombre, 
         u.email, 
         u.telefono, 
         u.direccion, 
+        u.rol,
+        u.activo,
         u.creado_en,
-        COUNT(p.id) AS total_pedidos,
+        COUNT(p.id)::int AS total_pedidos,
         COALESCE(SUM(p.total), 0)::float AS total_comprado
-      FROM usuarios u
-      LEFT JOIN pedidos p ON u.id = p.usuario_id AND p.estado != 'cancelado'
+      FROM public.usuarios u
+      LEFT JOIN public.pedidos p ON (
+        u.id = p.usuario_id
+        OR (p.usuario_id IS NULL AND LOWER(TRIM(p.cliente_nombre)) = LOWER(TRIM(u.nombre)))
+      ) AND p.estado != 'cancelado'
       WHERE u.rol = 'cliente'
       GROUP BY u.id
-      ORDER BY u.creado_en DESC
+      ORDER BY u.creado_en DESC, u.id DESC
     `);
 
-    res.json({ success: true, customers: result.rows });
+    res.json({ success: true, total: result.rows.length, customers: result.rows });
   } catch (error) {
     console.error('[ADMIN CUSTOMERS] Error:', error);
     res.status(500).json({ success: false, message: 'Error al consultar clientes' });

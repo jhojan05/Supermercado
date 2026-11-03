@@ -76,7 +76,40 @@ router.post('/', optionalToken, async (req, res) => {
     const descuento = 0; // Se pueden aplicar cupones en el futuro
     const total = subtotal - descuento;
     const codigoOrden = generateOrderCode();
-    const usuarioId = req.user ? req.user.id : null;
+    let usuarioId = req.user ? req.user.id : null;
+
+    // Si no viene autenticado con token, intentar vincular con cliente registrado por email o teléfono
+    if (!usuarioId) {
+      const emailBody = req.body.email ? String(req.body.email).trim().toLowerCase() : null;
+      const phoneClean = String(telefono).trim();
+      const matchRes = await client.query(
+        `SELECT id::int AS id FROM public.usuarios
+         WHERE rol = 'cliente'
+           AND (
+             ($1::text IS NOT NULL AND LOWER(email) = $1)
+             OR telefono = $2
+             OR LOWER(TRIM(nombre)) = LOWER(TRIM($3))
+           )
+         ORDER BY id DESC
+         LIMIT 1`,
+        [emailBody, phoneClean, nombre.trim()]
+      );
+      if (matchRes.rows.length > 0) {
+        usuarioId = matchRes.rows[0].id;
+      }
+    }
+
+    // Actualizar dirección y teléfono del cliente si ya está vinculado
+    if (usuarioId && direccion) {
+      await client.query(
+        `UPDATE public.usuarios
+         SET direccion = COALESCE(NULLIF($1, ''), direccion),
+             telefono = COALESCE(NULLIF($2, ''), telefono),
+             actualizado_en = CURRENT_TIMESTAMP
+         WHERE id = $3`,
+        [direccion.trim(), telefono.trim(), usuarioId]
+      );
+    }
 
     // 2. Insertar pedido principal
     const orderInsert = await client.query(
