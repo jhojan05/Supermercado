@@ -51,7 +51,7 @@ router.get('/metrics', async (req, res) => {
 
     // 6. Últimos 5 pedidos
     const ultimosPedidosRes = await db.query(`
-      SELECT id, codigo_orden, cliente_nombre, total::float, estado, creado_en
+      SELECT id::int AS id, codigo_orden, cliente_nombre, total::float, estado, creado_en
       FROM pedidos
       ORDER BY creado_en DESC
       LIMIT 5
@@ -90,9 +90,9 @@ router.get('/orders', async (req, res) => {
     const { estado, search } = req.query;
     let queryText = `
       SELECT 
-        p.id,
+        p.id::int AS id,
         p.codigo_orden,
-        p.usuario_id,
+        p.usuario_id::int AS usuario_id,
         p.cliente_nombre,
         p.cliente_telefono,
         p.cliente_direccion,
@@ -106,9 +106,9 @@ router.get('/orders', async (req, res) => {
         COALESCE(
           json_agg(
             json_build_object(
-              'id', pi.id,
+              'id', pi.id::int,
               'nombre', pi.nombre_producto,
-              'cantidad', pi.cantidad,
+              'cantidad', pi.cantidad::int,
               'precio', pi.precio_unitario::float,
               'total', pi.total_linea::float
             )
@@ -203,8 +203,8 @@ router.get('/products', async (req, res) => {
   try {
     const result = await db.query(`
       SELECT 
-        p.id, 
-        p.categoria_id,
+        p.id::int AS id, 
+        p.categoria_id::int AS categoria_id,
         p.nombre, 
         p.categoria_nombre AS "categoria", 
         p.presentacion, 
@@ -215,7 +215,7 @@ router.get('/products', async (req, res) => {
         p.destacado, 
         p.badge, 
         p.origen, 
-        p.stock,
+        p.stock::int AS stock,
         p.actualizado_en
       FROM productos p
       ORDER BY p.id ASC

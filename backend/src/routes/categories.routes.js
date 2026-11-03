@@ -9,7 +9,7 @@ const db = require('../config/db');
 router.get('/', async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT id, nombre, slug, descripcion, icono, orden
+      `SELECT id::int AS id, nombre, slug, descripcion, icono, orden::int AS orden
        FROM categorias
        WHERE activa = true
        ORDER BY orden ASC, nombre ASC`

@@ -718,6 +718,61 @@
       app.logoutUser();
       expect(state.user).toBe(null);
     });
+
+    it('Security.isBot debe estar definido y validar campos honeypot por ID', () => {
+      expect(typeof Security.isBot).toBe('function');
+      expect(Security.isBot('website_hp_co')).toBe(false);
+      expect(Security.isBot('website_hp_lf')).toBe(false);
+      expect(Security.isBot('website_hp_rf')).toBe(false);
+    });
+
+    it('addToCart debe funcionar incluso si los IDs del catálogo provienen como string (BIGINT de PostgreSQL)', () => {
+      app.clearCart(true);
+      const state = app.getState();
+      const originalId = state.products[0].id;
+      state.products[0].id = String(originalId); // Simula "1" desde BIGINT
+      app.addToCart(originalId, 2, 'kilo');
+      expect(state.cart.length).toBe(1);
+      expect(state.cart[0].id).toBe(Number(originalId));
+      expect(state.cart[0].quantity).toBe(2);
+      state.products[0].id = Number(originalId);
+      app.clearCart(true);
+    });
+
+    it('Flujo completo de compra: Agregar -> Abrir Comprar -> Seleccionar Método de Pago -> Confirmar Pedido', () => {
+      window.LaCasonaTestsRunning = true;
+      app.clearCart(true);
+      app.addToCart(1, 2, 'kilo'); // 2x Manzana ($14.400)
+      app.addToCart(9, 1);         // 1x Leche ($4.600) -> Total $19.000
+      expect(app.calculateTotal().total).toBe(19000);
+
+      // 1. Abrir modal de compra con openCheckout()
+      app.openCheckout();
+      const modal = document.getElementById('checkout-modal');
+      const formContainer = document.getElementById('checkout-form-container');
+      const successContainer = document.getElementById('checkout-success-container');
+      expect(modal.classList.contains('open')).toBe(true);
+      expect(formContainer.style.display).toBe('block');
+
+      // 2. Completar datos y método de pago
+      document.getElementById('checkout-name').value = 'Carlos Restrepo';
+      document.getElementById('checkout-neighborhood').value = 'Parque Principal';
+      document.getElementById('checkout-phone').value = '3103810674';
+      const nequiRadio = document.querySelector('input[name="paymentMethod"][value*="Nequi"]');
+      if (nequiRadio) nequiRadio.checked = true;
+
+      // 3. Ejecutar handleCheckoutSubmit
+      app.handleCheckoutSubmit({ preventDefault: () => {} });
+
+      // 4. Verificar confirmación exitosa y vaciado del carrito
+      expect(successContainer.style.display).toBe('block');
+      expect(app.getState().cart.length).toBe(0);
+      const reopenLink = document.getElementById('reopen-whatsapp-link');
+      expect(reopenLink.href).toContain('wa.me');
+
+      app.closeCheckout();
+      window.LaCasonaTestsRunning = false;
+    });
   });
 
   /* ==========================================================================

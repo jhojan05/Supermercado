@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
 
     let queryText = `
       SELECT 
-        p.id, 
+        p.id::int AS id, 
         p.nombre, 
         p.categoria_nombre AS "categoria", 
         p.presentacion, 
@@ -23,7 +23,7 @@ router.get('/', async (req, res) => {
         p.destacado, 
         p.badge, 
         p.origen, 
-        p.stock
+        p.stock::int AS stock
       FROM productos p
       WHERE p.disponible = true
     `;
@@ -95,7 +95,7 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
     const result = await db.query(
       `SELECT 
-        p.id, 
+        p.id::int AS id, 
         p.nombre, 
         p.categoria_nombre AS "categoria", 
         p.presentacion, 
@@ -106,7 +106,7 @@ router.get('/:id', async (req, res) => {
         p.destacado, 
         p.badge, 
         p.origen, 
-        p.stock
+        p.stock::int AS stock
        FROM productos p
        WHERE p.id = $1`,
       [id]

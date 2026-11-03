@@ -18,6 +18,26 @@ const STORAGE_KEYS = {
   OLD_USER: "supermercado_verde_user"
 };
 
+// Normaliza los tipos de datos del catálogo (garantizando id y precios numéricos aunque provengan de BIGINT en PostgreSQL)
+function normalizeCatalogProducts(list) {
+  if (!Array.isArray(list)) return [];
+  return list.map(p => {
+    if (!p || typeof p !== "object") return p;
+    const numId = parseInt(p.id, 10);
+    const numPrecio = typeof p.precio === "number" ? p.precio : parseFloat(p.precio) || 0;
+    const numPrecioAnt = p.precioAnterior !== null && p.precioAnterior !== undefined && p.precioAnterior !== ""
+      ? (typeof p.precioAnterior === "number" ? p.precioAnterior : parseFloat(p.precioAnterior) || null)
+      : null;
+    return {
+      ...p,
+      id: !isNaN(numId) ? numId : p.id,
+      precio: numPrecio,
+      precioAnterior: numPrecioAnt,
+      stock: p.stock !== undefined && p.stock !== null ? (parseInt(p.stock, 10) || 0) : 100
+    };
+  });
+}
+
 // Carga inicial segura del catálogo desde localStorage o PRODUCTS estático
 function getInitialProducts() {
   try {
@@ -25,11 +45,11 @@ function getInitialProducts() {
     if (cached) {
       const parsed = JSON.parse(cached);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        return normalizeCatalogProducts(parsed);
       }
     }
   } catch (e) {}
-  return typeof PRODUCTS !== "undefined" ? PRODUCTS : [];
+  return typeof PRODUCTS !== "undefined" ? normalizeCatalogProducts(PRODUCTS) : [];
 }
 
 // Estado global de la aplicación
@@ -165,6 +185,7 @@ function initApp() {
   renderCategories();
   handleUrlParams();
   applyFiltersAndSort();
+  renderCart();
   bindEvents();
   updateBadges();
   updateUserUI();
@@ -176,7 +197,7 @@ function initApp() {
  */
 async function fetchProductsFromBackend() {
   const endpoints = [];
-  if (window.location.protocol !== 'file:' && window.location.origin) {
+  if (window.location.protocol !== 'file:' && window.location.origin && window.location.origin !== 'null') {
     endpoints.push(`${window.location.origin}/api/products`);
   }
   endpoints.push('/api/products');
@@ -188,7 +209,7 @@ async function fetchProductsFromBackend() {
   for (const url of uniqueEndpoints) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
       const res = await fetch(url, {
         signal: controller.signal,
         headers: { 'Accept': 'application/json' }
@@ -198,12 +219,15 @@ async function fetchProductsFromBackend() {
       if (!res.ok) continue;
       const data = await res.json();
       if (data && data.success && Array.isArray(data.products) && data.products.length > 0) {
-        state.products = data.products;
+        const normalized = normalizeCatalogProducts(data.products);
+        state.products = normalized;
         try {
-          localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(data.products));
+          localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(normalized));
         } catch (e) {}
         applyFiltersAndSort();
-        console.log(`[Casona Backend] ${data.products.length} productos cargados desde ${url}`);
+        renderCart();
+        updateBadges();
+        console.log(`[Casona Backend] ${normalized.length} productos cargados desde ${url}`);
         return;
       }
     } catch (err) {
@@ -432,7 +456,8 @@ function renderProducts(productsToRender) {
   if (emptyState) emptyState.style.display = "none";
 
   grid.innerHTML = productsToRender.map(product => {
-    const isFav = state.favorites.includes(product.id);
+    const prodId = Number(product.id);
+    const isFav = state.favorites.some(favId => Number(favId) === prodId);
     const hasDiscount = product.precioAnterior && product.precioAnterior > product.precio;
     const savings = hasDiscount ? (product.precioAnterior - product.precio) : 0;
     const discountPercent = hasDiscount ? Math.round((savings / product.precioAnterior) * 100) : 0;
@@ -544,7 +569,7 @@ function renderProducts(productsToRender) {
  */
 function updateCardPriceDisplay(productId) {
   const numId = parseInt(productId, 10);
-  const product = state.products.find(p => p.id === numId);
+  const product = state.products.find(p => Number(p.id) === numId);
   if (!product) return;
 
   const card = document.querySelector(`.product-card[data-product-id="${numId}"]`);
@@ -690,7 +715,7 @@ function bindProductCardEvents() {
   grid.querySelectorAll("[data-add-id]").forEach(btn => {
     btn.addEventListener("click", () => {
       const id = parseInt(btn.getAttribute("data-add-id"), 10);
-      const product = state.products.find(p => p.id === id);
+      const product = state.products.find(p => Number(p.id) === id);
       const valEl = document.getElementById(`card-qty-${id}`);
       const quantity = valEl ? parseInt(valEl.textContent, 10) : 1;
 
@@ -762,13 +787,17 @@ function getItemNumericQuantity(item) {
  */
 function addToCart(productId, quantity = 1, unit = null) {
   const numId = parseInt(productId, 10);
-  const product = state.products.find(p => p.id === numId);
+  let product = state.products.find(p => Number(p.id) === numId);
+  if (!product && typeof PRODUCTS !== "undefined") {
+    product = PRODUCTS.find(p => Number(p.id) === numId);
+  }
   if (!product) return;
 
+  const prodId = Number(product.id);
   const validQty = Math.max(1, parseInt(quantity, 10) || 1);
   const isFruitVeg = product.categoria === "Frutas y verduras";
   const chosenUnit = isFruitVeg ? ((unit === "libra" || unit === "kilo") ? unit : "kilo") : null;
-  const cartItemId = isFruitVeg ? `${product.id}_${chosenUnit}` : String(product.id);
+  const cartItemId = isFruitVeg ? `${prodId}_${chosenUnit}` : String(prodId);
 
   // Buscar artículo existente en el carrito matching por cartItemId o id
   const existingItem = state.cart.find(item => {
@@ -776,9 +805,9 @@ function addToCart(productId, quantity = 1, unit = null) {
       return item.cartItemId === cartItemId;
     }
     if (isFruitVeg) {
-      return item.id === product.id && (item.unidad === chosenUnit || (!item.unidad && chosenUnit === "kilo"));
+      return Number(item.id) === prodId && (item.unidad === chosenUnit || (!item.unidad && chosenUnit === "kilo"));
     }
-    return item.id === product.id;
+    return Number(item.id) === prodId;
   });
 
   const basePrice = getItemNumericPrice(product);
@@ -796,7 +825,7 @@ function addToCart(productId, quantity = 1, unit = null) {
     }
   } else {
     state.cart.push({
-      id: product.id,
+      id: prodId,
       cartItemId: cartItemId,
       nombre: product.nombre,
       precio: effectivePrice,
@@ -1101,14 +1130,15 @@ function loadCart() {
  * Agrega o quita un producto de favoritos
  */
 function toggleFavorite(productId) {
-  const product = state.products.find(p => p.id === productId);
+  const numId = parseInt(productId, 10);
+  const product = state.products.find(p => Number(p.id) === numId);
   if (!product) return;
 
-  const index = state.favorites.indexOf(productId);
+  const index = state.favorites.findIndex(favId => Number(favId) === numId);
   let isFav = false;
 
   if (index === -1) {
-    state.favorites.push(productId);
+    state.favorites.push(numId);
     isFav = true;
     showToast(`Guardaste ${product.nombre} en favoritos`, "info");
   } else {
@@ -1141,7 +1171,10 @@ function loadFavorites() {
   try {
     const data = localStorage.getItem(STORAGE_KEYS.FAVORITES) || localStorage.getItem(STORAGE_KEYS.OLD_FAVORITES);
     if (data) {
-      state.favorites = JSON.parse(data);
+      const parsed = JSON.parse(data);
+      state.favorites = Array.isArray(parsed)
+        ? parsed.map(id => parseInt(id, 10)).filter(id => !isNaN(id))
+        : [];
     }
   } catch (e) {
     state.favorites = [];
@@ -1155,7 +1188,7 @@ function renderFavoritesModal() {
   const container = document.getElementById("favorites-body");
   if (!container) return;
 
-  const favoriteProducts = state.products.filter(p => state.favorites.includes(p.id));
+  const favoriteProducts = state.products.filter(p => state.favorites.some(favId => Number(favId) === Number(p.id)));
 
   if (favoriteProducts.length === 0) {
     container.innerHTML = `
@@ -1325,6 +1358,49 @@ function getStoreWhatsAppNumber() {
 }
 
 /**
+ * Retorna las instrucciones específicas para el método de pago elegido
+ */
+function getPaymentMethodInstructions(metodoPago) {
+  const method = String(metodoPago || 'Efectivo contra entrega').trim();
+  if (method.includes('Datáfono') || method.includes('Tarjeta')) {
+    return {
+      icon: '💳',
+      title: 'Datáfono / Tarjeta',
+      text: 'Nuestro domiciliario llevará datáfono inalámbrico a tu dirección para pago con tarjeta débito o crédito.'
+    };
+  }
+  if (method.includes('Nequi') || method.includes('Daviplata')) {
+    return {
+      icon: '📲',
+      title: 'Transferencia Nequi / Daviplata',
+      text: 'Transfiere al número 310 381 0674 (Supermercado La Casona) y adjunta el comprobante en el chat de WhatsApp.'
+    };
+  }
+  if (method.includes('Bancaria')) {
+    return {
+      icon: '🏦',
+      title: 'Transferencia Bancaria',
+      text: 'Realiza tu transferencia a nuestra cuenta Bancolombia y comparte el soporte en el chat de WhatsApp al confirmar.'
+    };
+  }
+  return {
+    icon: '💵',
+    title: 'Efectivo contra entrega',
+    text: 'Paga en efectivo al recibir tu pedido en casa o al recogerlo en el Parque Principal.'
+  };
+}
+
+/**
+ * Actualiza el recuadro informativo del método de pago en el modal de checkout
+ */
+function updatePaymentMethodInfo(selectedMethod) {
+  const infoEl = document.getElementById('payment-method-info');
+  if (!infoEl) return;
+  const info = getPaymentMethodInstructions(selectedMethod);
+  infoEl.innerHTML = `${info.icon} <strong>${escapeHTML(info.title)}:</strong> ${escapeHTML(info.text)}`;
+}
+
+/**
  * Genera el mensaje formateado del pedido para WhatsApp
  */
 function buildWhatsAppOrderMessage(clientData, cartItems, totalData, orderCode) {
@@ -1374,15 +1450,57 @@ function buildWhatsAppOrderMessage(clientData, cartItems, totalData, orderCode) 
 }
 
 /**
+ * Envía la orden al backend Node.js / Supabase con soporte multitransporte
+ */
+async function submitOrderToBackend(orderPayload) {
+  const endpoints = [];
+  if (window.location.protocol !== 'file:' && window.location.origin && window.location.origin !== 'null') {
+    endpoints.push(`${window.location.origin}/api/orders`);
+  }
+  endpoints.push('/api/orders');
+  endpoints.push('http://localhost:3000/api/orders');
+  endpoints.push('http://127.0.0.1:3000/api/orders');
+
+  const uniqueEndpoints = [...new Set(endpoints)];
+
+  for (const url of uniqueEndpoints) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const res = await fetch(url, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(orderPayload)
+      });
+      clearTimeout(timeoutId);
+
+      const data = await res.json();
+      if (res.ok && data && data.success) {
+        return data;
+      }
+    } catch (err) {
+      // Intentar siguiente endpoint
+    }
+  }
+  return null;
+}
+
+/**
  * Despacha el pedido a WhatsApp, registra en backend e historial, y actualiza interfaz
  */
 function dispatchOrderToWhatsApp(clientData) {
   const cartItems = [...state.cart];
-  if (cartItems.length === 0) return;
+  if (cartItems.length === 0) {
+    showToast('Tu carrito está vacío. Agrega productos antes de confirmar.', 'error');
+    return;
+  }
 
   const totalData = calculateTotal();
   const randomOrderNum = Math.floor(1000 + Math.random() * 9000);
   const orderCode = `ORDEN #LC-2026-${randomOrderNum}`;
+  const paymentMethodName = clientData.metodoPago || 'Efectivo contra entrega';
+  const paymentInfo = getPaymentMethodInstructions(paymentMethodName);
 
   const messageText = buildWhatsAppOrderMessage(clientData, cartItems, totalData, orderCode);
   const waNumber = getStoreWhatsAppNumber();
@@ -1398,7 +1516,11 @@ function dispatchOrderToWhatsApp(clientData) {
 
   if (orderCodeDisplay) orderCodeDisplay.textContent = orderCode;
   if (summaryDetails) {
-    summaryDetails.textContent = `A nombre de ${clientData.nombre} • Barrio: ${clientData.barrio || 'Anorí'} • Cel: ${clientData.telefono}. Tu pedido ha sido enviado al WhatsApp de La Casona.`;
+    summaryDetails.innerHTML = `
+      <strong>Cliente:</strong> ${escapeHTML(clientData.nombre)} • <strong>Barrio:</strong> ${escapeHTML(clientData.barrio || 'Anorí')} • <strong>Cel:</strong> ${escapeHTML(clientData.telefono)}<br>
+      <strong>Total:</strong> ${formatCOP(totalData.total)} • <strong>Pago:</strong> ${escapeHTML(paymentMethodName)}<br>
+      <span style="display:inline-block; margin-top:6px; color:var(--color-primary-dark, #064E3B); font-weight:600;">${paymentInfo.icon} ${escapeHTML(paymentInfo.text)}</span>
+    `;
   }
   if (reopenWaLink) {
     reopenWaLink.href = waUrl;
@@ -1414,6 +1536,7 @@ function dispatchOrderToWhatsApp(clientData) {
       codigo: orderCode,
       fecha: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }),
       total: totalData.total,
+      metodoPago: paymentMethodName,
       estado: 'Confirmado WhatsApp',
       items: cartItems.map(i => {
         const qty = getItemNumericQuantity(i);
@@ -1427,50 +1550,37 @@ function dispatchOrderToWhatsApp(clientData) {
     saveUser();
   }
 
-  // Notificar al backend local/Node.js si está activo
-  try {
-    fetch('/api/orders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        nombre: clientData.nombre,
-        telefono: clientData.telefono,
-        direccion: clientData.barrio || clientData.direccion || 'Anorí',
-        notas: clientData.notas || '',
-        metodoPago: clientData.metodoPago || 'Efectivo contra entrega',
-        items: cartItems.map(i => {
-          const qty = getItemNumericQuantity(i);
-          const price = getItemNumericPrice(i);
-          return {
-            id: i.id,
-            nombre: i.nombre,
-            cantidad: qty,
-            unidad: i.unidad || 'unidad',
-            peso_gramos: i.totalGramos || (i.pesoGramos ? qty * i.pesoGramos : null),
-            precio_unitario: price,
-            subtotal: price * qty
-          };
-        })
-      })
+  // Notificar al backend Node.js + PostgreSQL (Supabase)
+  const orderPayload = {
+    nombre: clientData.nombre,
+    telefono: clientData.telefono,
+    direccion: clientData.barrio || clientData.direccion || 'Anorí',
+    notas: clientData.notas || '',
+    metodoPago: paymentMethodName,
+    items: cartItems.map(i => {
+      const qty = getItemNumericQuantity(i);
+      const price = getItemNumericPrice(i);
+      return {
+        id: Number(i.id),
+        nombre: i.nombre,
+        cantidad: qty,
+        unidad: i.unidad || 'unidad',
+        peso_gramos: i.totalGramos || (i.pesoGramos ? qty * i.pesoGramos : null),
+        precio_unitario: price,
+        subtotal: price * qty
+      };
     })
-    .then(res => res.json())
-    .then(data => {
-      if (data && data.success && data.order && orderCodeDisplay) {
-        orderCodeDisplay.textContent = data.order.codigo;
-      }
-    })
-    .catch(err => console.log('[Modo Offline / Local]', err));
-  } catch (err) {}
+  };
 
-  // Abrir WhatsApp con el pedido prellenado
-  try {
-    const waWindow = window.open(waUrl, '_blank', 'noopener,noreferrer');
-    if (!waWindow) {
-      window.location.href = waUrl;
+  submitOrderToBackend(orderPayload).then(data => {
+    if (data && data.success && data.order && data.order.codigo) {
+      if (orderCodeDisplay) orderCodeDisplay.textContent = data.order.codigo;
+      if (reopenWaLink) {
+        const updatedMsg = buildWhatsAppOrderMessage(clientData, cartItems, totalData, data.order.codigo);
+        reopenWaLink.href = `https://wa.me/${waNumber}?text=${encodeURIComponent(updatedMsg)}`;
+      }
     }
-  } catch (e) {
-    window.location.href = waUrl;
-  }
+  }).catch(() => {});
 
   // Vaciar carrito tras generación exitosa
   state.cart = [];
@@ -1485,37 +1595,29 @@ function dispatchOrderToWhatsApp(clientData) {
     document.body.style.overflow = 'hidden';
   }
 
-  showToast('¡Pedido generado! Abriendo WhatsApp del supermercado...', 'success');
+  // Abrir WhatsApp en nueva pestaña sin abandonar la pantalla de confirmación ni abortar peticiones
+  try {
+    if (typeof window !== 'undefined' && !window.LaCasonaTestsRunning) {
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+    }
+  } catch (e) {}
+
+  showToast('¡Pedido confirmado! Revisa los detalles de pago o continúa en WhatsApp.', 'success');
 }
 
 /**
  * Al hacer clic en "Comprar":
- * - Si el cliente ya está registrado, envía directamente a WhatsApp sin pedir datos de nuevo.
- * - Si no está registrado, abre el formulario para pedir: Nombre, Barrio y Celular.
+ * Abre siempre el modal de confirmación de pedido y métodos de pago,
+ * prellenando los datos del cliente si ya están guardados.
  */
 function openCheckout() {
-  if (state.cart.length === 0) {
+  if (!Array.isArray(state.cart) || state.cart.length === 0) {
     showToast("Tu carrito está vacío. Agrega productos primero.", "info");
     return;
   }
 
   closeCart();
 
-  // Si el cliente ya está registrado (nombre, barrio y celular presentes)
-  if (isUserRegistered(state.user)) {
-    const userBarrio = state.user.barrio || state.user.direccion || 'Casco Urbano Anorí';
-    dispatchOrderToWhatsApp({
-      nombre: state.user.nombre,
-      barrio: userBarrio,
-      direccion: userBarrio,
-      telefono: state.user.telefono,
-      metodoPago: 'Efectivo contra entrega',
-      notas: ''
-    });
-    return;
-  }
-
-  // Si no está registrado, solicitar Nombre, Barrio y Celular en el modal
   const modal = document.getElementById("checkout-modal");
   const formContainer = document.getElementById("checkout-form-container");
   const successContainer = document.getElementById("checkout-success-container");
@@ -1524,16 +1626,19 @@ function openCheckout() {
   const { total } = calculateTotal();
   if (modalTotal) modalTotal.textContent = formatCOP(total);
 
-  // Prellenar campos si existen datos parciales
+  // Prellenar campos si existen datos del usuario en sesión
   const nameInput = document.getElementById("checkout-name");
   const neighborhoodInput = document.getElementById("checkout-neighborhood");
   const phoneInput = document.getElementById("checkout-phone");
 
   if (state.user) {
-    if (nameInput) nameInput.value = state.user.nombre || "";
-    if (neighborhoodInput) neighborhoodInput.value = state.user.barrio || state.user.direccion || "";
-    if (phoneInput) phoneInput.value = state.user.telefono || "";
+    if (nameInput && !nameInput.value) nameInput.value = state.user.nombre || "";
+    if (neighborhoodInput && !neighborhoodInput.value) neighborhoodInput.value = state.user.barrio || state.user.direccion || "";
+    if (phoneInput && !phoneInput.value) phoneInput.value = state.user.telefono || "";
   }
+
+  const checkedPayment = document.querySelector('input[name="paymentMethod"]:checked');
+  updatePaymentMethodInfo(checkedPayment ? checkedPayment.value : 'Efectivo contra entrega');
 
   if (formContainer) formContainer.style.display = "block";
   if (successContainer) successContainer.style.display = "none";
@@ -1558,19 +1663,26 @@ function closeCheckout() {
 }
 
 /**
- * Procesa la confirmación de checkout
+ * Procesa la confirmación de checkout y método de pago seleccionado
  */
 function handleCheckoutSubmit(e) {
-  e.preventDefault();
+  if (e && typeof e.preventDefault === 'function') {
+    e.preventDefault();
+  }
+
+  if (!Array.isArray(state.cart) || state.cart.length === 0) {
+    showToast('Tu carrito está vacío. Agrega productos antes de finalizar la compra.', 'error');
+    return;
+  }
 
   // --- DEFENSA ANTI-BOT: verificar honeypot ---
-  if (typeof Security !== 'undefined' && Security.isBot('website_hp_co')) {
+  if (typeof Security !== 'undefined' && typeof Security.isBot === 'function' && Security.isBot('website_hp_co')) {
     console.warn('[Security] Bot detectado en checkout. Solicitud rechazada.');
     return;
   }
 
   // --- RATE LIMITING: prevenir envíos repetitivos (máx 5 en 60 s) ---
-  if (typeof Security !== 'undefined' && !Security.rateLimit('checkout', 5, 60000)) {
+  if (typeof Security !== 'undefined' && typeof Security.rateLimit === 'function' && !Security.rateLimit('checkout', 5, 60000)) {
     showToast('Demasiados intentos. Por favor espera un momento antes de reintentar.', 'error');
     return;
   }
@@ -1599,8 +1711,9 @@ function handleCheckoutSubmit(e) {
       if (neighborhoodInput) neighborhoodInput.focus();
       return;
     }
-    if (rawPhone && !Security.validatePhone(rawPhone).valid) {
-      showToast('Teléfono celular inválido. Ingresa un número colombiano de 10 dígitos.', 'error');
+    const phoneValidation = Security.validatePhone(rawPhone);
+    if (!phoneValidation.valid) {
+      showToast(phoneValidation.error || 'Teléfono celular inválido. Ingresa un número colombiano de 10 dígitos.', 'error');
       if (phoneInput) phoneInput.focus();
       return;
     }
@@ -1647,7 +1760,7 @@ function handleCheckoutSubmit(e) {
   saveUser();
   updateUserUI();
 
-  // Despachar pedido con la lista completa a WhatsApp
+  // Despachar pedido con la lista completa a WhatsApp y backend
   dispatchOrderToWhatsApp({
     nombre: clientName,
     barrio: clientNeighborhood,
@@ -2278,6 +2391,13 @@ function bindEvents() {
   if (checkoutForm) checkoutForm.addEventListener("submit", handleCheckoutSubmit);
   if (successDoneBtn) successDoneBtn.addEventListener("click", closeCheckout);
 
+  // Actualizar instrucciones dinámicas al cambiar el método de pago
+  document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+    radio.addEventListener("change", (e) => {
+      updatePaymentMethodInfo(e.target.value);
+    });
+  });
+
   // FAQ accordion interaction: comportamiento accordion elegante para AEO
   const faqItems = document.querySelectorAll(".faq-item");
   faqItems.forEach(item => {
@@ -2318,7 +2438,7 @@ function bindEvents() {
       try {
         const updated = JSON.parse(e.newValue);
         if (Array.isArray(updated) && updated.length > 0) {
-          state.products = updated;
+          state.products = normalizeCatalogProducts(updated);
           applyFiltersAndSort();
           console.log("[Casona Sync] Catálogo de productos actualizado en tiempo real.");
         }
@@ -2336,7 +2456,7 @@ function bindEvents() {
             try {
               const updated = JSON.parse(cached);
               if (Array.isArray(updated) && updated.length > 0) {
-                state.products = updated;
+                state.products = normalizeCatalogProducts(updated);
                 applyFiltersAndSort();
                 console.log("[Casona Sync] Catálogo actualizado vía BroadcastChannel.");
               }
@@ -2404,6 +2524,10 @@ window.app = {
   closeFavorites,
   openCheckout,
   closeCheckout,
+  handleCheckoutSubmit,
+  getPaymentMethodInstructions,
+  updatePaymentMethodInfo,
+  normalizeCatalogProducts,
   openLoginModal,
   closeLoginModal,
   openProfileModal,

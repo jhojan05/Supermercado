@@ -36,7 +36,7 @@ router.post('/', optionalToken, async (req, res) => {
 
     for (const item of items) {
       const prodRes = await client.query(
-        `SELECT id, nombre, precio::float, disponible, stock FROM productos WHERE id = $1`,
+        `SELECT id::int AS id, nombre, categoria_nombre, precio::float, disponible, stock::int AS stock FROM productos WHERE id = $1`,
         [item.id]
       );
 
@@ -49,19 +49,26 @@ router.post('/', optionalToken, async (req, res) => {
         throw new Error(`El producto "${prod.nombre}" no está disponible actualmente.`);
       }
 
-      const cantidad = parseInt(item.cantidad, 10);
+      const cantidad = parseInt(item.cantidad !== undefined ? item.cantidad : item.quantity, 10);
       if (isNaN(cantidad) || cantidad <= 0) {
         throw new Error(`Cantidad inválida para el producto "${prod.nombre}".`);
       }
 
-      const totalLinea = prod.precio * cantidad;
+      const isFruitVeg = (prod.categoria_nombre || '').toLowerCase() === 'frutas y verduras';
+      const isLibra = isFruitVeg && (item.unidad === 'libra' || item.unit === 'libra');
+      const precioUnitario = isLibra ? Math.round(prod.precio / 2) : prod.precio;
+      const nombreProducto = isFruitVeg && (item.unidad === 'libra' || item.unidad === 'kilo')
+        ? `${prod.nombre} (${isLibra ? 'Libra 500g' : 'Kilo 1000g'})`
+        : prod.nombre;
+
+      const totalLinea = precioUnitario * cantidad;
       subtotal += totalLinea;
 
       validatedItems.push({
         producto_id: prod.id,
-        nombre_producto: prod.nombre,
+        nombre_producto: nombreProducto,
         cantidad,
-        precio_unitario: prod.precio,
+        precio_unitario: precioUnitario,
         total_linea: totalLinea
       });
     }
@@ -126,11 +133,12 @@ router.post('/', optionalToken, async (req, res) => {
       success: true,
       message: '¡Pedido registrado con éxito en Supermercado La Casona!',
       order: {
-        id: pedidoId,
+        id: Number(pedidoId),
         codigo: codigoOrden,
         cliente: nombre,
         telefono,
         direccion,
+        metodoPago: metodoPago || 'Efectivo contra entrega',
         total,
         estado: 'pendiente',
         itemsCount: validatedItems.length,

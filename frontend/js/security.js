@@ -109,14 +109,24 @@
      * Solo permite letras (incluyendo tildes y ñ), espacios y guiones (2 a 60 caracteres)
      */
     validateName: function (name) {
-      if (!name || typeof name !== 'string') return { valid: false, error: 'El nombre es obligatorio.' };
+      if (!name || typeof name !== 'string') {
+        const msg = 'El nombre es obligatorio.';
+        return { valid: false, error: msg, reason: msg };
+      }
       const trimmed = name.trim();
-      if (trimmed.length < 2) return { valid: false, error: 'El nombre debe tener mínimo 2 caracteres.' };
-      if (trimmed.length > 60) return { valid: false, error: 'El nombre no puede exceder 60 caracteres.' };
+      if (trimmed.length < 2) {
+        const msg = 'El nombre debe tener mínimo 2 caracteres.';
+        return { valid: false, error: msg, reason: msg };
+      }
+      if (trimmed.length > 60) {
+        const msg = 'El nombre no puede exceder 60 caracteres.';
+        return { valid: false, error: msg, reason: msg };
+      }
       
       const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+$/;
       if (!nameRegex.test(trimmed)) {
-        return { valid: false, error: 'El nombre solo puede contener letras y espacios.' };
+        const msg = 'El nombre solo puede contener letras y espacios.';
+        return { valid: false, error: msg, reason: msg };
       }
       return { valid: true, value: trimmed };
     },
@@ -125,7 +135,10 @@
      * Validador de número celular para Colombia (10 dígitos comenzando con 3)
      */
     validatePhone: function (phone) {
-      if (!phone || typeof phone !== 'string') return { valid: false, error: 'El teléfono es obligatorio.' };
+      if (!phone || typeof phone !== 'string') {
+        const msg = 'El teléfono es obligatorio.';
+        return { valid: false, error: msg, reason: msg };
+      }
       // Limpiar espacios, guiones y código de país (+57)
       let cleaned = phone.replace(/[\s\-\(\)\.]/g, '');
       if (cleaned.startsWith('+57')) cleaned = cleaned.slice(3);
@@ -133,9 +146,11 @@
 
       const phoneRegex = /^3[0-9]{9}$/;
       if (!phoneRegex.test(cleaned)) {
+        const msg = 'Ingresa un número celular colombiano válido de 10 dígitos (ej. 312 456 7890).';
         return { 
           valid: false, 
-          error: 'Ingresa un número celular colombiano válido de 10 dígitos (ej. 312 456 7890).' 
+          error: msg,
+          reason: msg
         };
       }
       return { valid: true, value: cleaned };
@@ -145,13 +160,20 @@
      * Validador de correo electrónico conforme a estándares seguros
      */
     validateEmail: function (email) {
-      if (!email || typeof email !== 'string') return { valid: false, error: 'El correo es obligatorio.' };
+      if (!email || typeof email !== 'string') {
+        const msg = 'El correo es obligatorio.';
+        return { valid: false, error: msg, reason: msg };
+      }
       const trimmed = email.trim();
-      if (trimmed.length > 100) return { valid: false, error: 'El correo no puede exceder 100 caracteres.' };
+      if (trimmed.length > 100) {
+        const msg = 'El correo no puede exceder 100 caracteres.';
+        return { valid: false, error: msg, reason: msg };
+      }
 
       const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
       if (!emailRegex.test(trimmed)) {
-        return { valid: false, error: 'Ingresa una dirección de correo electrónico válida.' };
+        const msg = 'Ingresa una dirección de correo electrónico válida.';
+        return { valid: false, error: msg, reason: msg };
       }
       return { valid: true, value: trimmed.toLowerCase() };
     },
@@ -161,17 +183,23 @@
      * Requiere mínimo 8 caracteres con al menos una letra y un número
      */
     validatePassword: function (password) {
-      if (!password || typeof password !== 'string') return { valid: false, error: 'La contraseña es obligatoria.' };
+      if (!password || typeof password !== 'string') {
+        const msg = 'La contraseña es obligatoria.';
+        return { valid: false, error: msg, reason: msg };
+      }
       if (password.length < 8) {
-        return { valid: false, error: 'La contraseña debe contener al menos 8 caracteres.' };
+        const msg = 'La contraseña debe contener al menos 8 caracteres.';
+        return { valid: false, error: msg, reason: msg };
       }
       if (password.length > 128) {
-        return { valid: false, error: 'La contraseña no puede superar 128 caracteres.' };
+        const msg = 'La contraseña no puede superar 128 caracteres.';
+        return { valid: false, error: msg, reason: msg };
       }
       const hasLetter = /[a-zA-Z]/.test(password);
       const hasNumber = /[0-9]/.test(password);
       if (!hasLetter || !hasNumber) {
-        return { valid: false, error: 'La contraseña debe incluir al menos una letra y un número.' };
+        const msg = 'La contraseña debe incluir al menos una letra y un número.';
+        return { valid: false, error: msg, reason: msg };
       }
       return { valid: true };
     },
@@ -183,6 +211,33 @@
       if (!notes) return { valid: true, value: '' };
       const sanitized = Security.sanitizeText(notes, 200);
       return { valid: true, value: sanitized };
+    },
+
+    /**
+     * Detección Anti-Bot mediante campo Honeypot (admite ID de elemento o nodo formulario)
+     */
+    isBot: function (inputIdOrElement) {
+      if (!inputIdOrElement) return false;
+      try {
+        if (typeof inputIdOrElement === 'string') {
+          const el = typeof document !== 'undefined' ? document.getElementById(inputIdOrElement) : null;
+          if (!el) return false;
+          if (typeof el.value === 'string' && el.value.trim() !== '') {
+            console.warn('[Seguridad] Alerta: Bot detectado en campo honeypot #' + inputIdOrElement);
+            return true;
+          }
+          return false;
+        }
+        if (typeof inputIdOrElement === 'object') {
+          if (typeof inputIdOrElement.value === 'string') {
+            return inputIdOrElement.value.trim() !== '';
+          }
+          if (typeof inputIdOrElement.querySelector === 'function') {
+            return Security.isHoneypotTriggered(inputIdOrElement);
+          }
+        }
+      } catch (e) {}
+      return false;
     },
 
     /**
@@ -342,7 +397,7 @@
      */
     sanitizeFavorites: function (rawFavorites, catalog) {
       if (!Array.isArray(rawFavorites) || !Array.isArray(catalog)) return [];
-      const validIds = new Set(catalog.map(p => p.id));
+      const validIds = new Set(catalog.map(p => parseInt(p && p.id, 10)).filter(id => !isNaN(id)));
       return rawFavorites
         .map(id => parseInt(id, 10))
         .filter(id => !isNaN(id) && validIds.has(id));

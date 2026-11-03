@@ -2890,7 +2890,7 @@
       },
 
       viewOrderDetail: function(orderId) {
-        const order = this.ordersCache.find(o => o.id === orderId);
+        const order = this.ordersCache.find(o => Number(o.id) === Number(orderId));
         if (!order) return;
 
         document.getElementById('modal-order-title').textContent = `Detalle del ${order.codigo_orden}`;
@@ -3082,7 +3082,7 @@
       },
 
       adjustStock: async function(productId, delta) {
-        const prod = this.productsCache.find(p => p.id === productId);
+        const prod = this.productsCache.find(p => Number(p.id) === Number(productId));
         if (!prod) return;
 
         const current = typeof prod.stock === 'number' ? prod.stock : parseInt(prod.stock, 10) || 0;
@@ -3107,7 +3107,7 @@
       },
 
       toggleProduct: async function(productId, field) {
-        const prod = this.productsCache.find(p => p.id === productId);
+        const prod = this.productsCache.find(p => Number(p.id) === Number(productId));
         if (prod) {
           prod[field] = !prod[field];
           this.syncProducts(this.productsCache);
@@ -3156,7 +3156,7 @@
       },
 
       openEditProductModal: function(productId) {
-        const prod = this.productsCache.find(p => p.id === productId);
+        const prod = this.productsCache.find(p => Number(p.id) === Number(productId));
         if (!prod) return;
 
         document.getElementById('product-modal-title').textContent = `Editar Producto #${prod.id}`;
@@ -3209,12 +3209,12 @@
         if (id) {
           const numId = parseInt(id, 10);
           payload.id = numId;
-          const idx = this.productsCache.findIndex(p => p.id === numId);
+          const idx = this.productsCache.findIndex(p => Number(p.id) === numId);
           if (idx !== -1) {
             this.productsCache[idx] = { ...this.productsCache[idx], ...payload };
           }
         } else {
-          const maxId = this.productsCache.reduce((max, p) => Math.max(max, p.id || 0), 0);
+          const maxId = this.productsCache.reduce((max, p) => Math.max(max, Number(p.id) || 0), 0);
           payload.id = maxId + 1;
           this.productsCache.push(payload);
         }
@@ -3260,7 +3260,7 @@
       deleteProduct: async function(productId, nombre) {
         if (!confirm(`¿Estás seguro de eliminar el producto "${nombre}" del catálogo?`)) return;
 
-        this.productsCache = this.productsCache.filter(p => p.id !== productId);
+        this.productsCache = this.productsCache.filter(p => Number(p.id) !== Number(productId));
         this.syncProducts(this.productsCache);
         this.filterProducts();
 
