@@ -40,3 +40,8 @@ Desarrollar una plataforma web que facilite la experiencia de compra de los clie
 ## Autor
 
 Jhojan
+## Estado del proyecto
+
+El proyecto se encuentra en desarrollo.
+Se realizan mejoras continuas en sus funcionalidades
+y en la experiencia de usuario.
