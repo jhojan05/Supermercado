@@ -503,7 +503,6 @@ function renderProducts(productsToRender) {
             ${escapeHTML(product.nombre)}
           </h3>
           <p class="product-unit" id="product-unit-text-${product.id}">${escapeHTML(product.presentacion)}</p>
-          ${product.origen ? `<p class="product-origin"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block; vertical-align:middle; margin-right:3px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>${escapeHTML(product.origen)}</p>` : ''}
 
           <!-- Selector de Unidad Libra / Kilo para Frutas y verduras -->
           ${product.categoria === "Frutas y verduras" ? `
